@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Demandes de Certification - JESFOD{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>Demandes de Certification</h2>
+      <p class="text-muted">Liste des membres du bureau en attente de validation.</p>
+    </div>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Retour au dashboard</a>
+  </div>
+
+  <div class="row g-4">
+    {% for member in pending_members %}
+    <div class="col-md-6">
+      <div class="card custom-card shadow-sm p-4 h-100">
+        <div class="d-flex align-items-center gap-3">
+          {% if member.profile_photo %}
+          <img src="{{ member.profile_photo.url }}" alt="{{ member.name }}" class="rounded-circle" style="width: 90px; height: 90px; object-fit: cover; border: 3px solid #0d6efd;">
+          {% else %}
+          <div class="profile-fallback rounded-circle d-flex align-items-center justify-content-center" style="width: 90px; height: 90px;">{{ member.name.0|upper }}</div>
+          {% endif %}
+          <div>
+            <h5 class="mb-1">{{ member.name }}</h5>
+            <p class="mb-1 text-muted">{{ member.email }}</p>
+            <p class="mb-0"><span class="badge bg-warning text-dark">{{ member.get_role_display }}</span></p>
+          </div>
+        </div>
+        <div class="mt-4 d-flex justify-content-between gap-2 flex-wrap">
+          <form action="{% url 'certify_member' member.pk %}" method="post" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Certifier</button>
+          </form>
+          <a href="{% url 'member_update' member.pk %}" class="btn btn-outline-primary">Modifier</a>
+          <a href="{% url 'member_delete' member.pk %}" class="btn btn-outline-danger" onclick="return confirm('Supprimer {{ member.name }} ?')">Supprimer</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="card card-body text-center shadow-sm">
+        <h5>Aucune demande en attente.</h5>
+        <p class="text-muted">Tous les membres du bureau sont déjà certifiés.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

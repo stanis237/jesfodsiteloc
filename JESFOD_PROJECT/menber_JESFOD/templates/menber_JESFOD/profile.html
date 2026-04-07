@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %}Mon Profil - JESFOD{% endblock %}
+{% block extra_head %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <div class="card shadow-lg overflow-hidden">
+        <div class="profile-banner position-relative">
+          <div class="profile-cover"></div>
+          <div class="profile-avatar position-absolute top-100 start-50 translate-middle">
+            {% if member.profile_photo %}
+            <img src="{{ member.profile_photo.url }}" class="profile-photo-lg rounded-circle shadow-lg" alt="{{ member.name }}">
+            {% else %}
+            <div class="profile-avatar-fallback-lg rounded-circle shadow-lg d-flex align-items-center justify-content-center fw-bold text-white">
+              {{ member.name.0|upper }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body pt-5 mt-4">
+          <div class="row text-center mb-4">
+            <div class="col-12">
+              <h3 class="mb-1">{{ member.name }}</h3>
+              <p class="text-muted mb-0">{{ member.get_role_display }}</p>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-md-6">
+              <h6><i class="bi bi-person me-2 text-primary"></i>Nom complet</h6>
+              <p class="fw-bold">{{ member.name }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="bi bi-envelope me-2 text-primary"></i>Email</h6>
+              <p>{{ member.email }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="bi bi-telephone me-2 text-primary"></i>Téléphone</h6>
+              <p>{{ member.phone|default:"Non renseigné" }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="bi bi-mortarboard me-2 text-primary"></i>Niveau scolaire</h6>
+              <p>{{ member.get_school_level_display|default:"Non renseigné" }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="bi bi-people me-2 text-primary"></i>Rôle</h6>
+<span class="badge bg-{{ member.is_bureau|yesno:'success,info' }}">{{ member.get_role_display }}</span>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="bi bi-check-circle me-2 text-primary"></i>Statut certification</h6>
+<span class="badge bg-{{ member.is_certified|yesno:'success,warning' }}">{% if member.is_certified %}Certifié{% else %}En attente{% endif %}</span>
+              {% if member.certification_date %}
+              <p class="small text-muted mt-1">Depuis {{ member.certification_date|date:"d/m/Y" }}</p>
+              {% endif %}
+            </div>
+          </div>
+          <hr>
+          <div class="text-center">
+            <a href="{% url 'member_dashboard' %}" class="btn btn-primary me-2"><i class="bi bi-pencil"></i> Éditer</a>
+            <a href="{% url 'news_list' %}" class="btn btn-info"><i class="bi bi-newspaper"></i> Actualités</a>
+            {% if member.profile_photo %}
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#cropModal">
+              <i class="bi bi-scissors"></i> Recadrer la photo
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Crop Modal -->
+<div class="modal fade" id="cropModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Recadrer la photo de profil</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center">
+          <img id="cropImage" src="{{ member.profile_photo.url }}" alt="Photo à recadrer" style="max-width: 100%;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" id="cropBtn">Appliquer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let cropper;
+    const cropModal = document.getElementById('cropModal');
+    const cropImage = document.getElementById('cropImage');
+    const cropBtn = document.getElementById('cropBtn');
+
+    cropModal.addEventListener('shown.bs.modal', function() {
+        cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+            responsive: true,
+            restore: false,
+            checkCrossOrigin: false,
+            checkOrientation: false,
+            modal: true,
+            guides: true,
+            center: true,
+            highlight: true,
+            background: true,
+            autoCrop: true,
+            autoCropArea: 0.8,
+            dragMode: 'move'
+        });
+    });
+
+    cropModal.addEventListener('hidden.bs.modal', function() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    });
+
+    cropBtn.addEventListener('click', function() {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({
+                width: 300,
+                height: 300,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+            
+            canvas.toBlob(function(blob) {
+                const formData = new FormData();
+                formData.append('profile_photo', blob, 'cropped_profile.jpg');
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
+                fetch('{% url "member_dashboard" %}', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Erreur lors de la sauvegarde de la photo recadrée.');
+                    }
+                });
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

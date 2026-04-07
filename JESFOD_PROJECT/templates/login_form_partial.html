@@ -1,0 +1,18 @@
+<div class="login-form-compact card shadow-lg mx-auto" style="max-width: 400px;">
+  <div class="card-body p-4">
+    <h5 class="card-title text-center mb-4 text-primary">Connexion rapide</h5>
+    <form method="post" action="{% url 'home' %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <input type="text" name="username" class="form-control" placeholder="Nom d'utilisateur" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" name="password" class="form-control" placeholder="Mot de passe" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 mb-2">Se connecter</button>
+    </form>
+    <div class="text-center">
+      <a href="{% url 'login' %}" class="text-muted small">Page de connexion complète</a>
+    </div>
+  </div>
+</div>

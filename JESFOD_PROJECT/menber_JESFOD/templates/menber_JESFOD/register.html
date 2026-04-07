@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %}Inscription - JESFOD{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-lg border-0">
+        <div class="card-body p-5">
+          <h2 class="text-center mb-4 text-primary">Inscription JESFOD</h2>
+          <p class="text-center text-muted mb-4">Rejoignez notre communauté dès maintenant !</p>
+          
+          {% if form.errors %}
+            <div class="alert alert-danger">
+              <ul class="mb-0">
+                {% for field, errors in form.errors.items %}
+                  {% for error in errors %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                {{ form.username }}
+              </div>
+              <div class="col-md-6">
+                {{ form.name }}
+              </div>
+              <div class="col-md-6">
+                {{ form.email }}
+              </div>
+              <div class="col-md-6">
+                {{ form.phone }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Photo de profil</label>
+                {{ form.profile_photo }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Niveau scolaire</label>
+                {{ form.school_level }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Votre rôle / Poste</label>
+                {{ form.role }}
+              </div>
+              <div class="col-12">
+                {{ form.password1 }}
+              </div>
+              <div class="col-12">
+                {{ form.password2 }}
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-4 shadow-sm">S'inscrire</button>
+          </form>
+          
+          <div class="text-center mt-4">
+            <a href="{% url 'login' %}" class="btn btn-outline-primary w-100 mb-3 d-block">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Déjà membre ? Se connecter
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">← Retour à l'accueil</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

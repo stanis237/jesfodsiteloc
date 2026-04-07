@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Accueil Membre - JESFOD{% endblock %}
+{% block meta_description %}Dashboard membre JESFOD - Accueil personnalisé, statistiques, actualités et activités pour les membres de l'association des jeunes de Fonakeukeur Douala.{% endblock %}
+{% block og_title %}Dashboard - JESFOD{% endblock %}
+{% block og_description %}Votre dashboard membre JESFOD avec stats, news et événements.{% endblock %}
+
+{% block content %}
+<!-- Hero Section - Animated Slideshow -->
+<section id="accueil" class="hero-slideshow text-center py-5 animate__animated animate__fadeIn">
+  <div class="hero-slide"></div>
+  <div class="hero-slide"></div>
+  <div class="hero-slide"></div>
+  <div class="hero-slide"></div>
+  <div class="hero-content">
+    <h1 class="display-3 fw-bold mb-4 text-white" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Bienvenue à <span class="text-warning">JESFOD</span></h1>
+    <p class="lead mb-5 fs-4 text-white" style="text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Association des Jeunes solidaire de Fonakeukeu de DOUALA pour l'éducation, la culture et le développement social</p>
+    <div class="row justify-content-center">
+      <div class="col-lg-5">
+        <a href="#apropos" class="btn btn-outline-light btn-lg px-5 w-100 mb-3 d-block">Découvrir</a>
+      </div>
+      <div class="col-lg-5">
+        {% if not user.is_authenticated %}
+          <a href="{% url 'login' %}" class="btn btn-light btn-lg px-5 w-100">Se connecter</a>
+        {% else %}
+          <a href="{% url 'member_dashboard' %}" class="btn btn-light btn-lg px-5 w-100">Dashboard</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats py-5 bg-light-green">
+  <div class="container">
+    <div class="row text-center g-4" style="gap: 1em;">
+      <div class="col-md-3" style="background-color: yellow; border-radius: 20px; padding: 2rem;">
+        <div class="stat-number" data-target="150">0</div>
+        <h5>Membres</h5>
+      </div>
+      <div class="col-md-3" style="background-color: green; border-radius: 20px; padding: 2rem;">
+        <div class="stat-number" data-target="25">0</div>
+        <h5>Événements</h5>
+      </div>
+      <div class="col-md-3" style="background-color:darkgoldenrod; border-radius: 20px; padding: 2rem;">
+        <div class="stat-number" data-target="5">0</div>
+        <h5>Années</h5>
+      </div>
+      <div class="col-md-3" style="background-color: blue; border-radius: 20px; padding: 2rem;">
+        <div class="stat-number" data-target="100">0</div>
+        <h5>Projets</h5>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section id="apropos" class="py-5 bg-white">
+  <div class="container">
+    <h2 class="text-center mb-5">À Propos de JESFOD</h2>
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="img-fluid rounded shadow" alt="Jeunes">
+      </div>
+      <div class="col-lg-6">
+        <h3 class="mb-4 text-primary-green fw-bold">Notre Mission</h3>
+        <p class="lead mb-4">Rassembler les jeunes de Fonakeukeur autour d'activités éducatives, culturelles et sociales pour favoriser leur développement personnel et communautaire.</p>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="d-flex">
+              <i class="bi bi-check-circle-fill text-primary-green fs-3 me-3"></i>
+              <div>
+                <h6>Éducation</h6>
+                <p>Formations et ateliers</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex">
+              <i class="bi bi-heart-fill text-primary-green fs-3 me-3"></i>
+              <div>
+                <h6>Communauté</h6>
+                <p>Solidarité et entraide</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <a href="#contact" class="btn btn-primary mt-4">Nous Contacter</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- News Section -->
+<section id="news" class="py-5 bg-light">
+  <div class="container">
+    <h2 class="text-center mb-5">Actualités</h2>
+    <div class="row g-4">
+      {% for item in news %}
+      <div class="col-md-4">
+        <div class="card h-100">
+          {% if item.image %}
+          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ item.title }}</h5>
+            <p class="card-text">{{ item.content|truncatechars:100 }}</p>
+            <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center">Aucune actualité pour le moment.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Gallery Section -->
+<section id="galerie" class="py-5 bg-white">
+  <div class="container">
+    <h2 class="text-center mb-5">Galerie</h2>
+    <div class="row g-4">
+      {% for item in galleries %}
+      <div class="col-md-4">
+        <div class="card h-100">
+          {% if item.image %}
+          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ item.title }}</h5>
+            <p class="card-text">{{ item.description|truncatechars:100 }}</p>
+            <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center">Aucune galerie pour le moment.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-5 bg-white">
+  <div class="container">
+    <h2 class="text-center mb-5">Ce Que Disent Nos Membres</h2>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card testimonial-card p-4">
+          <p class="mb-3">"JESFOD a transformé ma vie grâce à ses formations et son esprit communautaire."</p>
+          <h6>- Malimeta katty., Membre active</h6>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card testimonial-card p-4">
+          <p class="mb-3">"Une association dynamique qui fait la différence à Fonakeukeur."</p>
+          <h6>- alain evrad., Bénévolaire</h6>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card testimonial-card p-4">
+          <p class="mb-3">"Les événements sont toujours enrichissants et joyeux."</p>
+          <h6>- raissa dollars., Jeune membre</h6>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="py-5 bg-primary-green text-white">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <h2 class="mb-4">Contactez-Nous</h2>
+        <p class="lead mb-4">Rejoignez-nous ou posez vos questions.</p>
+        <ul class="list-unstyled">
+          <li class="mb-3"><i class="bi bi-telephone me-3"></i>+237 674867509</li>
+          <li class="mb-3"><i class="bi bi-envelope me-3"></i>jesfod.org</li>
+          <li><i class="bi bi-geo-alt me-3"></i>Fonakeukeur, Cameroun</li>
+        </ul>
+      </div>
+      <div class="col-lg-6">
+        <form action="#" method="post" class="row g-3">
+          <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="Nom" required>
+          </div>
+          <div class="col-md-6">
+            <input type="email" class="form-control" placeholder="Email" required>
+          </div>
+          <div class="col-12">
+            <textarea class="form-control" rows="5" placeholder="Votre message" required></textarea>
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-light btn-lg w-100">Envoyer le Message</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

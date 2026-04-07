@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - JESFOD{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Tableau de Bord Bureau</h2>
+  <div class="d-flex flex-wrap gap-3 mb-4">
+    <a href="{% url 'member_list' %}" class="btn btn-primary">Gérer les Membres</a>
+    <a href="{% url 'pending_certifications' %}" class="btn btn-warning">Demandes de certification</a>
+    <a href="{% url 'news_create' %}" class="btn btn-success">Publier une actualité</a>
+    <a href="{% url 'gallery_create' %}" class="btn btn-info">Ajouter une galerie</a>
+  </div>
+  <div class="row g-4 mb-5">
+    <div class="col-md-3">
+      <div class="card text-center shadow h-100">
+        <div class="card-body">
+          <i class="bi bi-people-fill display-4 text-primary mb-3"></i>
+          <h3>{{ total_members }}</h3>
+          <p class="text-muted">Membres Total</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center shadow h-100">
+        <div class="card-body">
+          <i class="bi bi-check-circle-fill display-4 text-success mb-3"></i>
+          <h3>{{ certified_members }}</h3>
+          <p class="text-muted">Certifiés</p>
+          <small class="text-muted d-block mt-2">Bureau validés</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center shadow h-100">
+        <div class="card-body">
+          <i class="bi bi-star-fill display-4 text-warning mb-3"></i>
+          <h3>{{ bureau_members }}</h3>
+          <p class="text-muted">Bureau</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center shadow h-100">
+        <div class="card-body">
+          <i class="bi bi-newspaper display-4 text-info mb-3"></i>
+          <h3>{{ total_news }}</h3>
+          <p class="text-muted">Actualités</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+          <h5>Nouveaux Membres Récents</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            {% for member in recent_members %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ member.name }} ({{ member.role }})
+                <span class="badge {{ member.is_certified|yesno:'bg-success,bg-warning' }}">{{ member.is_certified|yesno:'✓,?' }}</span>
+              </li>
+            {% empty %}
+              <li class="list-group-item text-muted">Aucun nouveau membre</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h5>Actions Rapides</h5>
+        </div>
+        <div class="card-body">
+          <a href="{% url 'news_create' %}" class="btn btn-success w-100 mb-2">Nouvelle Actualité</a>
+          <a href="{% url 'gallery_create' %}" class="btn btn-info w-100 mb-2">Nouvelle Galerie</a>
+          <a href="{% url 'pending_certifications' %}" class="btn btn-warning w-100 mb-2">Demandes de certification</a>
+          <a href="{% url 'member_list' %}" class="btn btn-dark w-100 mb-2">Gérer Membres</a>
+          <a href="/admin/" class="btn btn-outline-primary w-100 mb-2">Administration Django</a>
+          <a href="{% url 'logout' %}" class="btn btn-secondary w-100">Déconnexion</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

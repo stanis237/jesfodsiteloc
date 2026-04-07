@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Tableau de bord Membre</h2>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header bg-info text-white">
+          <h5><i class="bi bi-people me-2"></i>Dashboard Réunion Member</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header bg-info text-white">
+          <h5>Dernières Actualités</h5>
+        </div>
+        <div class="card-body">
+          {% for news in news_list %}
+            <div class="mb-2 p-2 border-bottom">
+              <h6>{{ news.title }}</h6>
+              <p class="small mb-0">{{ news.content|truncatewords:15 }}</p>
+              <small class="text-muted">{{ news.created_date|date:"d/m/Y" }}</small>
+            </div>
+          {% empty %}
+            <p class="text-muted">Aucune actualité récente.</p>
+          {% endfor %}
+          <a href="{% url 'news_list' %}" class="btn btn-sm btn-outline-primary mt-2">Voir toutes les actualités</a>
+          {% if member.is_bureau %}
+            <a href="{% url 'news_create' %}" class="btn btn-sm btn-success mt-2">Publier</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h5>Votre Profil</h5>
+        </div>
+        <div class="card-body">
+          <h6>Stats Globales</h6>
+          <p>Membres: <strong>{{ total_members }}</strong> | Actualités: <strong>{{ total_news }}</strong></p>
+          <hr>
+          <p><strong>Nom:</strong> {{ member.name }}</p>
+          <p><strong>Email:</strong> {{ member.email }}</p>
+          <p><strong>Téléphone:</strong> {{ member.phone|default:"Non renseigné" }}</p>
+          {% if member.profile_photo %}
+          <div class="text-center mb-3">
+            <img src="{{ member.profile_photo.url }}" alt="Photo de profil" class="profile-photo">
+          </div>
+          {% else %}
+          <div class="text-center mb-3">
+            <div class="profile-avatar-fallback">
+              <span>👤</span>
+            </div>
+          </div>
+          {% endif %}
+          <p><strong>Niveau scolaire:</strong> {{ member.get_school_level_display|default:"Non renseigné" }}</p>
+          <p><strong>Rôle:</strong> {{ member.get_role_display }}</p>
+          <p><strong>Certifié:</strong> 
+            {% if member.is_certified %}
+              <span class="badge bg-success">Oui</span>
+            {% else %}
+              <span class="badge bg-warning">En attente</span>
+            {% endif %}
+          </p>
+          {% if not member.is_certified %}
+          <div class="alert alert-info mt-3">
+            <strong>Statut de conformité:</strong> Votre profil n'est pas encore certifié. 
+            <a href="{% url 'certification' %}" class="alert-link">Cliquez ici pour vous certifier</a>.
+          </div>
+          {% endif %}
+          <hr>
+          <h6>Éditer Profil</h6>
+          <form method="post" enctype="multipart/form-data" class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="edit_profile" value="1">
+            {{ edit_form.as_p }}
+            <button type="submit" class="btn btn-primary btn-sm">Sauvegarder</button>
+          </form>
+          <div class="mt-3">
+            <a href="{% url 'certification' %}" class="btn btn-warning btn-sm">Certification</a>
+            <a href="{% url 'news_list' %}" class="btn btn-info btn-sm">Actualités</a>
+            <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">Déconnexion</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

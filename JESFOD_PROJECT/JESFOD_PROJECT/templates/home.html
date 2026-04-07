@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accueil - Présentation JESFOD Association Jeunes Fonakeukeur Douala{% endblock %}
+
+{% block meta_description %}Accueil JESFOD - Découvrez le bureau exécutif, dernières actualités, galerie photos et activités de l'association des jeunes solidaires de Fonakeukeur Douala. Rejoignez-nous !{% endblock %}
+
+{% block og_title %}Accueil - JESFOD{% endblock %}
+{% block og_description %}Découvrez JESFOD : Bureau exécutif, actualités et galerie de l'association des jeunes de Fonakeukeur Douala. Éducation et solidarité.{% endblock %}
+{% block og_image %}{% static 'images/cp4.jpg' %}{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="hero-slideshow text-center py-5 animate__animated animate__fadeIn">
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-content">
+                <h1 class="display-4 fw-bold mb-4">Bienvenue à la JESFOD</h1>
+                <p class="lead mb-4">Association solidaire des Jeunes de Fonakeukeur de Douala</p>
+                <div class="hero-buttons d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Se connecter</a>
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg">S'inscrire</a>
+                    {% else %}
+                      <a href="{% url 'member_dashboard' %}" class="btn btn-success btn-lg">Mon Dashboard</a>
+                      <a href="/adminjesfod/" class="btn btn-light btn-lg text-primary">Admin JESFOD</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if user.is_authenticated and member %}
+        <div class="card profile-welcome-card shadow-lg border-0 p-4 mx-auto" style="max-width: 950px;">
+          <div class="d-flex flex-column flex-md-row align-items-center gap-4 justify-content-center">
+              {% if member.profile_photo %}
+              <img src="{{ member.profile_photo.url }}" alt="Photo de profil de {{ member.name }} membre JESFOD" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover; border: 5px solid #ffffff;">
+              {% else %}
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow" style="width: 120px; height: 120px; font-size: 3rem;">
+                {{ member.name.0|upper }}
+              </div>
+              {% endif %}
+              <div class="text-center text-md-start">
+                <h3 class="mb-1 text-dark">Bienvenue, {{ member.name }}</h3>
+                <p class="mb-2 text-muted">Rôle : {{ member.get_role_display }}</p>
+                <a href="{% url 'member_dashboard' %}" class="btn btn-primary btn-lg">Accéder au tableau de bord</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Bureau Members Section -->
+        <section id="bureau" class="py-5 bg-light">
+          <div class="container">
+            <h2 class="section-title text-center mb-5">Bureau Exécutif JESFOD</h2>
+            {% if bureau_members %}
+            <div class="row g-4">
+              {% for member in bureau_members %}
+              <div class="col-lg-4 col-md-6">
+                <div class="card h-100 shadow-sm border border-primary border-2 rounded-4">
+                  <div class="card-body text-center p-4">
+
+{% if member.profile_photo %}
+  <img src="{{ member.profile_photo.url }}" alt="{{ member.name }} - {{ member.get_role_display }} JESFOD" class="rounded-circle mb-3 mx-auto shadow border border-primary" style="width: 100px; height: 100px; object-fit: cover; border-width: 3px;">
+{% else %}
+  <div class="avatar mb-3 mx-auto rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; font-size: 1.5rem; border: 3px solid #0d6efd;">
+    {{ member.name.0|upper }}
+  </div>
+{% endif %}
+
+                    <h5 class="card-title">{{ member.name }}</h5>
+                    <p class="card-text text-primary fw-bold">{{ member.get_role_display }}</p>
+                    <p class="text-muted small">{{ member.email }}</p>
+
+                    {% if member.phone %}
+                    <p class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ member.phone }}</p>
+                    {% endif %}
+                    {% if member.activities %}
+                    <p class="text-success small fw-semibold fst-italic">{{ member.activities|truncatewords:10 }}</p>
+                    {% endif %}
+
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center">
+              <p class="text-muted">Aucun membre de bureau enregistré pour le moment.</p>
+            </div>
+            {% endif %}
+            <div class="text-center mt-4">
+              <a href="{% url 'register' %}" class="btn btn-outline-primary">Rejoindre le bureau</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- News Section -->
+        <section id="news" class="py-5 bg-light">
+          <div class="container">
+            <h2 class="section-title text-center mb-5">Actualités</h2>
+            <div class="row g-4">
+              {% for item in news %}
+              <div class="col-md-4">
+                <div class="card custom-card news-card h-100">
+                  {% if item.image %}
+                  <img src="{{ item.image.url }}" class="card-img-top" alt="Actualité {{ item.title }} JESFOD">
+                  {% endif %}
+                  <div class="card-body">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <p class="card-text">{{ item.content|truncatechars:100 }}</p>
+                    <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <p class="text-center">Aucune actualité pour le moment.</p>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section id="galerie" class="py-5 bg-white">
+          <div class="container">
+            <h2 class="section-title text-center mb-5">Galerie</h2>
+            <div class="row g-4">
+              {% for item in galleries %}
+              <div class="col-md-4">
+                <div class="card custom-card gallery-card h-100">
+                  {% if item.image %}
+                  <img src="{{ item.image.url }}" class="card-img-top" alt="Galerie {{ item.title }} JESFOD">
+                  {% endif %}
+                  <div class="card-body">
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <p class="card-text">{{ item.description|truncatechars:100 }}</p>
+                    <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <p class="text-center">Aucune galerie pour le moment.</p>
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+    </div>
+{% endblock %}

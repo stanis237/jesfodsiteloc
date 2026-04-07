@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Certification du Profil</h2>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h5>Informations du Profil</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Nom:</strong> {{ member.name }}</p>
+          <p><strong>Email:</strong> {{ member.email }}</p>
+          <p><strong>Rôle:</strong> {{ member.get_role_display }}</p>
+          <p><strong>Certifié:</strong> {% if member.is_certified %}Oui{% else %}Non{% endif %}</p>
+          {% if member.certification_date %}
+          <p><strong>Date de certification:</strong> {{ member.certification_date|date:"d/m/Y H:i" }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      {% if already_certified %}
+        <div class="card shadow border-success">
+          <div class="card-header bg-success text-white">
+            <h5>Profil Déjà Certifié</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-success">Votre profil est déjà certifié.</p>
+            <p><strong>Date de certification:</strong> {{ member.certification_date|date:"d/m/Y H:i" }}</p>
+            <a href="{% url 'member_dashboard' %}" class="btn btn-primary">Retour au Dashboard</a>
+          </div>
+        </div>
+      {% else %}
+        <div class="card shadow">
+          <div class="card-header bg-warning text-dark">
+            <h5>Demande de Certification</h5>
+          </div>
+          <div class="card-body">
+            {% if member.is_bureau %}
+              <p>En tant que membre du bureau, vous pouvez certifier votre profil.</p>
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="certify" value="1">
+                <button type="submit" class="btn btn-success" onclick="return confirm('Confirmer la certification ?')">Certifier mon Profil</button>
+              </form>
+            {% else %}
+              <p class="text-muted">La certification est réservée aux membres du bureau.</p>
+              <p>Si vous pensez être éligible, contactez un administrateur.</p>
+            {% endif %}
+            <a href="{% url 'member_dashboard' %}" class="btn btn-secondary mt-2">Retour au Dashboard</a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %}Liste des Actualités - JESFOD Association Jeunes Fonakeukeur{% endblock %}
+{% block meta_description %}Actualités JESFOD - Dernières news, événements et annonces de l'association des jeunes solidaires de Fonakeukeur Douala. Restez informé !{% endblock %}
+{% block og_title %}Actualités - JESFOD{% endblock %}
+{% block og_description %}Toutes les actualités de JESFOD : événements, annonces et activités de l'association.{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Actualités JESFOD</h2>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+  <div class="row mb-3">
+    {% if user.member.is_bureau %}
+      <div class="col-auto">
+        <a href="{% url 'news_create' %}" class="btn btn-primary">Nouvelle Actualité</a>
+      </div>
+    {% endif %}
+  </div>
+  {% for news in news %}
+    <div class="card mb-3">
+      {% if news.image %}
+        <a href="{% url 'news_detail' news.pk %}">
+          <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}" style="height: 200px; object-fit: cover; cursor: pointer;">
+        </a>
+      {% endif %}
+      <div class="card-body">
+        <h5 class="card-title">
+          <a href="{% url 'news_detail' news.pk %}" class="text-decoration-none">{{ news.title }}</a>
+        </h5>
+        <p class="card-text">{{ news.content|truncatewords:50 }}</p>
+        <p class="text-muted small">Par {{ news.created_by.name }} - {{ news.created_date|date:"d/m/Y H:i" }}</p>
+        <div class="d-flex gap-2">
+          <a href="{% url 'news_detail' news.pk %}" class="btn btn-sm btn-primary">Lire plus</a>
+          {% if user.member.is_bureau and news.created_by == user.member %}
+            <a href="#" class="btn btn-sm btn-outline-warning">Éditer</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p>Aucune actualité pour le moment.</p>
+  {% endfor %}
+</div>
+{% endblock %}

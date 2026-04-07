@@ -1,0 +1,14 @@
+{% csrf_token %}
+<form method="post" action="." class="login-form-compact d-flex flex-column gap-2 w-100">
+  <div>
+    <input type="text" class="form-control form-control-lg" name="username" placeholder="Nom d'utilisateur" required autocomplete="username">
+  </div>
+  <div>
+    <input type="password" class="form-control form-control-lg" name="password" placeholder="Mot de passe" required autocomplete="current-password">
+  </div>
+  <button type="submit" class="btn btn-light btn-lg w-100 shadow-sm">Se connecter</button>
+</form>
+<div class="text-center mt-2">
+  <p class="small mb-2">Pas de compte ?</p>
+  <a href="{% url 'register' %}" class="btn btn-outline-light">S'inscrire</a>
+</div>

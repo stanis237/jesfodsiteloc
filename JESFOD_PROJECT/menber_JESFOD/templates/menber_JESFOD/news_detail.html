@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %}{{ news.title }} - JESFOD{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <article class="card shadow-lg border-0">
+        {% if news.image %}
+        <img src="{{ news.image.url }}" class="news-image card-img-top" alt="{{ news.title }}" style="height: 400px; object-fit: cover;">
+        {% endif %}
+        <div class="card-body p-5">
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+              <h1 class="card-title display-4 fw-bold mb-2">{{ news.title }}</h1>
+              <p class="text-muted mb-0">
+                Par <strong>{{ news.created_by.name }}</strong> 
+                le {{ news.created_date|date:"d F Y à H:i" }}
+              </p>
+            </div>
+            <a href="{% url 'news_list' %}" class="btn btn-outline-primary"><i class="bi bi-arrow-left me-2"></i>Toutes les actualités</a>
+          </div>
+          <div class="content">
+            {{ news.content|linebreaks }}
+          </div>
+          {% if user.is_authenticated and user.member.is_bureau and news.created_by == user.member %}
+          <div class="mt-4 pt-4 border-top">
+            <a href="{% url 'news_create' %}" class="btn btn-warning me-2">Éditer</a>
+          </div>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+{% endblock %}
