@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
 load_dotenv()
@@ -44,16 +45,7 @@ INSTALLED_APPS = [
     'menber_JESFOD',
 ]
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+MIDDLEWARE = [\n    'django.middleware.security.SecurityMiddleware',\n    {\n        'middleware': 'whitenoise.middleware.WhiteNoiseMiddleware',\n        'config': {\n            'ensure_static_files': True,\n        }\n    },\n    'django.contrib.sessions.middleware.SessionMiddleware',\n    'django.middleware.common.CommonMiddleware',\n    'django.middleware.csrf.CsrfViewMiddleware',\n    'django.contrib.auth.middleware.AuthenticationMiddleware',\n    'django.contrib.messages.middleware.MessageMiddleware',\n    'django.middleware.clickjacking.XFrameOptionsMiddleware',\n]
 
 ROOT_URLCONF = 'JESFOD_PROJECT.urls'
 
@@ -82,13 +74,9 @@ WSGI_APPLICATION = 'JESFOD_PROJECT.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=3600,
-        conn_health_checks=True,
-    )
-}
+#
+
+DATABASES = {\n    'default': dj_database_url.config(\n        default=os.environ.get('DATABASE_URL'),\n        conn_max_age=3600,\n        conn_health_checks=True,\n    )\n}
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -122,26 +110,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+import os
+from pathlib import Path
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # Directory now created
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_REDIRECT_URL = '/menber/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
-# Security for production
-SECURE_SSL_REDIRECT = not DEBUG
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = 'DENY'
-
-# Default primary key field type
+# Security for production\nSECURE_SSL_REDIRECT = not DEBUG\nSECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0\nSECURE_HSTS_INCLUDE_SUBDOMAINS = True\nSECURE_HSTS_PRELOAD = True\nSECURE_CONTENT_TYPE_NOSNIFF = True\nSECURE_BROWSER_XSS_FILTER = True\nX_FRAME_OPTIONS = 'DENY'\n\n# Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -153,4 +134,3 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your-email@gmail.com'
 EMAIL_HOST_PASSWORD = 'your-app-password'
-

@@ -1,0 +1,1 @@
+web: gunicorn JESFOD_PROJECT.wsgi:application --log-file -
