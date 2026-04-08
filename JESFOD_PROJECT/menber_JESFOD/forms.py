@@ -70,7 +70,7 @@ class CustomRegisterForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'name', 'email', 'phone', 'school_level', 'role', 'password1', 'password2')
+        fields = ('username', 'email', 'password1', 'password2')
 
     role = forms.ChoiceField(
         choices=Member.ROLE_CHOICES,

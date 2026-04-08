@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-w-uf2%7^i!y)@p*2syg0qhao#dyjy)(!ta#l)t-1bmo_)(j#yw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -78,14 +78,15 @@ WSGI_APPLICATION = 'JESFOD_PROJECT.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+#
+
 DATABASES = {
     'default': {
+    
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 

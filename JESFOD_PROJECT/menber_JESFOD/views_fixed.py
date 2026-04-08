@@ -59,7 +59,33 @@ def custom_login(request):
         form = CustomLoginForm()
     return render(request, 'menber_JESFOD/login.html', {'form': form})
 
-def register(request):\n    print('=== REGISTER DEBUG ===')\n    print('Method:', request.method)\n    print('CSRF Cookie:', request.COOKIES.get('csrftoken'))\n    print('CSRF Token in POST:', request.POST.get('csrfmiddlewaretoken'))\n    print('User:', request.user)\n    if request.method == 'POST':\n        print('POST data keys:', list(request.POST.keys()))\n        print('FILES:', list(request.FILES.keys()))\n        form = CustomRegisterForm(request.POST, request.FILES)\n        print('Form valid:', form.is_valid())\n        print('Form errors:', form.errors)\n        print('Non-form errors:', form.non_field_errors())\n        if form.is_valid():\n            user = form.save()\n            login(request, user)\n            member = Member.objects.get(user=user)\n            if member.role == 'bureau':\n                return redirect('/adminjesfod/')\n            else:\n                return redirect('member_dashboard')\n        else:\n            messages.error(request, 'Erreur dans le formulaire. Corrigez les erreurs.')\n    else:\n        form = CustomRegisterForm()\n    print('Rendering form')\n    return render(request, 'menber_JESFOD/register.html', {'form': form})
+def register(request):
+    print('=== REGISTER DEBUG ===')
+    print('Method:', request.method)
+    print('CSRF Cookie:', request.COOKIES.get('csrftoken'))
+    print('CSRF Token in POST:', request.POST.get('csrfmiddlewaretoken'))
+    print('User:', request.user)
+    if request.method == 'POST':
+        print('POST data keys:', list(request.POST.keys()))
+        print('FILES:', list(request.FILES.keys()))
+        form = CustomRegisterForm(request.POST, request.FILES)
+        print('Form valid:', form.is_valid())
+        print('Form errors:', form.errors)
+        print('Non-form errors:', form.non_field_errors())
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            member = Member.objects.get(user=user)
+            if member.role == 'bureau':
+                return redirect('admin_dashboard')
+            else:
+                return redirect('member_dashboard')
+        else:
+            messages.error(request, 'Erreur dans le formulaire. Corrigez les erreurs.')
+    else:
+        form = CustomRegisterForm()
+    print('Rendering form')
+    return render(request, 'menber_JESFOD/register.html', {'form': form})
 
 @login_required
 def member_dashboard(request):
@@ -115,8 +141,7 @@ def news_list(request):
     member, _ = Member.objects.get_or_create(user=request.user)
     news = News.objects.filter(is_published=True).order_by('-created_date')
     if not member.is_bureau:
-        # For reunion members, show all published news, not just their own
-        pass  # Remove the filter that was limiting to their own news
+        pass
     return render(request, 'menber_JESFOD/news_list.html', {'news': news, 'is_member_page': True})
 
 @login_required
@@ -133,10 +158,9 @@ def news_create(request):
             news.save()
             messages.success(request, 'Actualité publiée !')
             
-            # Send email notifications to all members
             if news.is_published:
                 members = Member.objects.all()
-                recipient_emails = [member.email for member in members if member.email]
+                recipient_emails = [m.email for m in members if m.email]
                 
                 if recipient_emails:
                     subject = f'Nouvelle actualité JESFOD: {news.title}'
@@ -164,7 +188,6 @@ L'équipe JESFOD
                             fail_silently=True,
                         )
                     except Exception as e:
-                        # Log the error but don't fail the news creation
                         print(f"Email sending failed: {e}")
             
             return redirect('news_list')
@@ -200,7 +223,6 @@ class MemberDetailView(DetailView):
 @login_required
 def member_activities(request):
     member, _ = Member.objects.get_or_create(user=request.user)
-    # Get activities from the member's activities field
     activities = member.activities.split('\n') if member.activities else []
     return render(request, 'menber_JESFOD/activities.html', {
         'member': member,

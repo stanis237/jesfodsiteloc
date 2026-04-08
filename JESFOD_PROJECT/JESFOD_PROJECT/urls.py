@@ -2,10 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from menber_JESFOD import views
+from menber_JESFOD.views_fixed import *
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('menber/', include('menber_JESFOD.urls')),
     path('adminjesfod/', include('admin_JESFOD.urls')),

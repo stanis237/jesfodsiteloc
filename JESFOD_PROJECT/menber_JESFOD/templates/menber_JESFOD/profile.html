@@ -13,9 +13,9 @@
           <div class="profile-cover"></div>
           <div class="profile-avatar position-absolute top-100 start-50 translate-middle">
             {% if member.profile_photo %}
-            <img src="{{ member.profile_photo.url }}" class="profile-photo-lg rounded-circle shadow-lg" alt="{{ member.name }}">
+            <img src="{{ member.profile_photo.url }}" class="rounded-circle shadow-lg" alt="{{ member.name }}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 5px;">
             {% else %}
-            <div class="profile-avatar-fallback-lg rounded-circle shadow-lg d-flex align-items-center justify-content-center fw-bold text-white">
+            <div class="rounded-circle shadow-lg d-flex align-items-center justify-content-center fw-bold text-white" style="width: 120px; height: 120px; border-radius: 5px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
               {{ member.name.0|upper }}
             </div>
             {% endif %}
@@ -83,7 +83,7 @@
       </div>
       <div class="modal-body">
         <div class="text-center">
-          <img id="cropImage" src="{{ member.profile_photo.url }}" alt="Photo à recadrer" style="max-width: 100%;">
+          <img id="cropImage" src="{{ member.profile_photo.url }}" alt="Photo à recadrer" style="max-width: 100%; border-radius: 5px;">
         </div>
       </div>
       <div class="modal-footer">

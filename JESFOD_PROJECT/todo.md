@@ -1,23 +1,11 @@
-# Fix Template Error & Reduce Profile Image Size
-## Status: In Progress
+# Django SyntaxError Fix - TODO List
 
-### 1. [ ] Fix base.html
-- Remove duplicate {% block title %} tags
-- Fix UTF-8 encoding (replace smart quotes « » with ", non-breaking spaces)
-- Ensure single {% block title %}JESFOD...{% endblock %}
+## Steps to complete:
+- [x] 1. Create TODO.md with this plan breakdown  
+- [x] 2. Re-read views.py to confirm current content (previous edit failed due to no exact match)
+- [x] 3. Created corrected menber_JESFOD/views_fixed.py with fixed register function (proper newlines, indentation, updated redirect to 'admin_dashboard')
+- [x] 4. Updated JESFOD_PROJECT/urls.py to import from views_fixed instead of broken views.py
+- [ ] 3. Verify fix with `python manage.py check`
+- [ ] 4. Test server startup with `python manage.py runserver`
+- [ ] 5. Mark complete with attempt_completion
 
-### 2. [ ] Reduce profile images in home.html
-- Welcome member card: 120px -> 80px width/height
-- Bureau member cards: 100px -> 70px width/height
-- Adjust padding/margins for better text visibility
-
-### 3. [ ] Update CSS (if needed)
-- Add .bureau-member-img class fallback
-
-### 4. [ ] Test & Verify
-- Restart server: python manage.py runserver
-- Visit http://127.0.0.1:8000/ - no 500 error
-- Check bureau cards show name/role/email/phone/activities fully
-- collectstatic if CSS changes
-
-### 5. [ ] Complete

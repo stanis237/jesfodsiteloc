@@ -165,20 +165,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  // Form submit simulation
-  document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const btn = this.querySelector('button[type=\"submit\"]');
-      const original = btn.textContent;
-      btn.textContent = 'Envoyé !';
-      btn.disabled = true;
-      setTimeout(() => {
-        btn.textContent = original;
-        btn.disabled = false;
-        this.reset();
-        alert('Message envoyé avec succès ! (Simulation)');
-      }, 2000);
-    });
-  });
-});
+  // Form submit simulation REMOVED - interferes with register/login\n  // Only apply to contact/newsletter forms if needed\n});
