@@ -14,7 +14,7 @@ TEMPLATES_DIR = BASE_DIR / 'JESFOD_PROJECT' / 'templates'
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['jesfod.onrender.com', '.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['https://jesfodfona.pythonanywhere.com/']
 
 # ---------------------
 # Applications
