@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>{% trans "Delete Member" %}</h1>
+<p>{% trans "Are you sure you want to delete the following member?" %}</p>
+<p><strong>{{ object }}</strong></p>
+<form method="post">
+    {% csrf_token %}
+    <input type="submit" value="{% trans 'Confirm Delete' %}" class="default"/>
+    <a href="{{ object.get_absolute_url }}" class="button cancel-link">{% trans "Cancel" %}</a>
+</form>
+{% endblock %}

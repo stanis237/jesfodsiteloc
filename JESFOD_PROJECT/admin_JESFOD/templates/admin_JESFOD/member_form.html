@@ -1,31 +1,446 @@
 {% extends 'base.html' %}
-{% block title %}Gestion Membre - Admin JESFOD{% endblock %}
+{% block title %}{% if object %}Modifier{% else %}Ajouter{% endif %} un Membre - Admin JESFOD{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
+<div class="container py-5 mt-4">
   <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h4>{% if object %}Modifier{% else %}Créer{% endif %} Membre</h4>
-          {% if note %}<div class="alert alert-warning mt-2">{{ note }}</div>{% endif %}
+    <div class="col-lg-10 col-xl-9 animate__animated animate__fadeIn">
+      
+      <!-- Bouton Retour -->
+      <div class="mb-4">
+        <a href="{% url 'member_list' %}" class="btn btn-link text-decoration-none p-0 d-inline-flex align-items-center text-primary fw-semibold transition-transform hover-left">
+          <i class="bi bi-arrow-left me-2"></i>
+          Retour à la liste des membres
+        </a>
+      </div>
+
+      <!-- Card Formulaire Premium -->
+      <div class="card border-0 shadow-lg form-card-premium overflow-hidden">
+        <div class="form-card-header bg-gradient-premium text-white p-4 p-md-5 text-center position-relative">
+          <div class="header-overlay"></div>
+          <div class="header-content position-relative z-index-1">
+            <span class="badge bg-white-15 rounded-pill mb-2 px-3 py-1 font-size-xs tracking-wider uppercase">Gestion Administration</span>
+            <h2 class="mb-1 fw-bold font-size-lg-2">{% if object %}Modifier{% else %}Créer{% endif %} un Membre</h2>
+            <p class="text-white-75 mb-0 font-size-sm">Renseignez les détails ci-dessous pour gérer le profil du membre.</p>
+          </div>
         </div>
-        <div class="card-body">
-          <form method="post" enctype="multipart/form-data">
+
+        <div class="card-body p-4 p-md-5 bg-white">
+          {% if note %}
+          <div class="alert alert-warning alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+            {{ note }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          {% endif %}
+
+          <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
             {% csrf_token %}
             {{ form.media }}
-            <div class="row g-3">
-              {% for field in form %}
-              <div class="col-md-6">{{ field.label_tag }} {{ field }} {% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}</div>
-              {% endfor %}
+
+            <!-- SECTION 1: INFORMATIONS PERSONNELLES -->
+            <div class="form-section mb-4">
+              <h5 class="form-section-title text-primary fw-bold mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-person-circle text-primary"></i>
+                <span>Informations Personnelles</span>
+              </h5>
+              
+              <div class="row g-4">
+                <!-- Nom complet -->
+                <div class="col-md-6">
+                  <div class="form-group-premium">
+                    <label for="{{ form.name.id_for_label }}" class="form-label-premium">Nom Complet <span class="text-danger">*</span></label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                      <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6">
+                  <div class="form-group-premium">
+                    <label for="{{ form.email.id_for_label }}" class="form-label-premium">Adresse Email <span class="text-danger">*</span></label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                      <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Téléphone -->
+                <div class="col-md-6">
+                  <div class="form-group-premium">
+                    <label for="{{ form.phone.id_for_label }}" class="form-label-premium">Numéro de Téléphone</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                      <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Niveau d'études -->
+                <div class="col-md-6">
+                  <div class="form-group-premium">
+                    <label for="{{ form.school_level.id_for_label }}" class="form-label-premium">Niveau d'études</label>
+                    {{ form.school_level }}
+                    {% if form.school_level.errors %}
+                      <div class="text-danger small mt-1">{{ form.school_level.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Adresse -->
+                <div class="col-12">
+                  <div class="form-group-premium">
+                    <label for="{{ form.address.id_for_label }}" class="form-label-premium">Adresse / Ville de résidence</label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                      <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="mt-4">
-              <a href="{% url 'member_list' %}" class="btn btn-secondary">Annuler</a>
-              <button type="submit" class="btn btn-primary">Enregistrer</button>
+
+            <hr class="border-light-gray my-4">
+
+            <!-- SECTION 2: PHOTO DE PROFIL -->
+            <div class="form-section mb-4">
+              <h5 class="form-section-title text-primary fw-bold mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-image text-primary"></i>
+                <span>Photo de Profil</span>
+              </h5>
+              
+              <div class="row g-4 align-items-center">
+                <!-- Prévisualisation de l'image -->
+                <div class="col-md-3 text-center">
+                  <div class="photo-preview-container mx-auto">
+                    {% if object and object.profile_photo %}
+                      <img id="imagePreview" src="{{ object.profile_photo.url }}" alt="Aperçu photo" class="img-preview-avatar">
+                    {% else %}
+                      <div id="avatarFallback" class="avatar-preview-fallback">
+                        <i class="bi bi-camera fs-2 text-white-50"></i>
+                      </div>
+                      <img id="imagePreview" src="" alt="Aperçu photo" class="img-preview-avatar d-none">
+                    {% endif %}
+                  </div>
+                </div>
+                
+                <!-- Zone d'importation de fichier -->
+                <div class="col-md-9">
+                  <div class="file-upload-wrapper">
+                    <label for="{{ form.profile_photo.id_for_label }}" class="file-upload-zone p-4 text-center d-block rounded-4 border-dashed cursor-pointer">
+                      <i class="bi bi-cloud-arrow-up fs-3 text-primary mb-2"></i>
+                      <div class="fw-semibold text-dark mb-1">Choisissez une photo de profil</div>
+                      <div class="text-muted small">PNG, JPG ou JPEG (Format carré de préférence)</div>
+                      <div class="d-none">
+                        {{ form.profile_photo }}
+                      </div>
+                    </label>
+                    <div id="fileSelectedName" class="text-muted small mt-2 text-center text-md-start"></div>
+                    {% if form.profile_photo.errors %}
+                      <div class="text-danger small mt-1">{{ form.profile_photo.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <hr class="border-light-gray my-4">
+
+            <!-- SECTION 3: PARAMÈTRES D'ASSOCIATION -->
+            <div class="form-section mb-5">
+              <h5 class="form-section-title text-primary fw-bold mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-primary"></i>
+                <span>Statuts & Responsabilités</span>
+              </h5>
+              
+              <div class="row g-4">
+                <!-- Type de membre (Rôle) -->
+                <div class="col-md-6">
+                  <div class="form-group-premium">
+                    <label for="{{ form.role.id_for_label }}" class="form-label-premium">Type de Membre (Rôle)</label>
+                    {{ form.role }}
+                    {% if form.role.errors %}
+                      <div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Poste occupé -->
+                <div class="col-md-6">
+                  <div class="form-group-premium">
+                    <label for="{{ form.position.id_for_label }}" class="form-label-premium">Poste occupé (si membre du Bureau)</label>
+                    {{ form.position }}
+                    {% if form.position.errors %}
+                      <div class="text-danger small mt-1">{{ form.position.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Activités et responsabilités -->
+                <div class="col-12">
+                  <div class="form-group-premium">
+                    <label for="{{ form.activities.id_for_label }}" class="form-label-premium">Activités et responsabilités</label>
+                    {{ form.activities }}
+                    {% if form.activities.errors %}
+                      <div class="text-danger small mt-1">{{ form.activities.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Certification -->
+                <div class="col-12">
+                  <div class="card bg-light border-0 rounded-4 p-3 mt-2" style="background-color: rgba(0, 123, 255, 0.04) !important;">
+                    <div class="form-check form-switch d-flex align-items-center justify-content-between p-0 m-0">
+                      <div class="me-3">
+                        <label class="form-check-label fw-bold text-dark cursor-pointer d-block" for="{{ form.is_certified.id_for_label }}">
+                          Certifier le membre
+                        </label>
+                        <span class="text-muted small">Cochez cette case pour marquer ce membre comme certifié (bureau exécutif).</span>
+                      </div>
+                      <div class="switch-premium-wrapper">
+                        {{ form.is_certified }}
+                      </div>
+                    </div>
+                    {% if form.is_certified.errors %}
+                      <div class="text-danger small mt-1">{{ form.is_certified.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOUTONS D'ACTION -->
+            <div class="d-flex flex-column flex-sm-row justify-content-end gap-3 pt-3 border-top border-light-gray">
+              <a href="{% url 'member_list' %}" class="btn btn-cancel py-3 px-4 rounded-pill order-2 order-sm-1">
+                Annuler
+              </a>
+              <button type="submit" class="btn btn-save py-3 px-5 rounded-pill order-1 order-sm-2 d-inline-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-check2-circle fs-5"></i>
+                <span>Enregistrer le Profil</span>
+              </button>
+            </div>
+
           </form>
         </div>
       </div>
+
     </div>
   </div>
 </div>
+
+<style>
+  /* Variables locales de style */
+  :root {
+    --primary-blue: #007BFF;
+    --secondary-blue: #0056b3;
+    --primary-green: #28a745;
+    --border-dashed: rgba(0, 123, 255, 0.3);
+    --light-blue-10: rgba(0, 123, 255, 0.05);
+    --white-15: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Transition sur bouton retour */
+  .hover-left {
+    transition: transform 0.2s ease;
+  }
+  .hover-left:hover {
+    transform: translateX(-4px);
+  }
+
+  /* Carte Premium */
+  .form-card-premium {
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* En-tête avec dégradé */
+  .bg-gradient-premium {
+    background: linear-gradient(135deg, #007BFF 0%, #6f42c1 100%) !important;
+  }
+  .header-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 90%);
+  }
+
+  /* Sections */
+  .form-section-title {
+    font-size: 1.15rem;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--light-blue-10);
+    padding-bottom: 8px;
+  }
+
+  /* Champs et Labels */
+  .form-group-premium {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .form-label-premium {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0;
+  }
+  .form-control, .form-select {
+    border-radius: 12px !important;
+    border: 1.5px solid #dee2e6 !important;
+    padding: 12px 16px !important;
+    font-size: 0.95rem !important;
+    transition: all 0.25s ease !important;
+    background-color: #f8f9fa !important;
+  }
+  .form-control:focus, .form-select:focus {
+    background-color: #ffffff !important;
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15) !important;
+    outline: none !important;
+  }
+  textarea.form-control {
+    min-height: 80px;
+  }
+
+  /* Commutateur de certification */
+  .form-switch {
+    padding-left: 0;
+  }
+  .form-switch .form-check-input {
+    width: 3.2em !important;
+    height: 1.7em !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    float: none !important;
+    cursor: pointer;
+    border-radius: 50px !important;
+    background-color: #ced4da;
+    border: none !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='%23fff' d='M5 10a5 5 0 1 1 10 0 5 5 0 0 1 -10 0z'/%3e%3c/svg%3e");
+  }
+  .form-switch .form-check-input:checked {
+    background-color: var(--primary-green) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='%23fff' d='M5 10a5 5 0 1 1 10 0 5 5 0 0 1 -10 0z'/%3e%3c/svg%3e");
+  }
+
+  /* Bouton d'upload */
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  .border-dashed {
+    border: 2px dashed var(--border-dashed);
+    transition: all 0.25s ease;
+  }
+  .file-upload-zone:hover {
+    background-color: var(--light-blue-10);
+    border-color: var(--primary-blue);
+  }
+
+  /* Prévisualisation Photo */
+  .photo-preview-container {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 3px solid #ffffff;
+    outline: 2px solid #e9ecef;
+    background-color: #6c757d;
+  }
+  .img-preview-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .avatar-preview-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #6c757d, #adb5bd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Boutons */
+  .btn-save {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    box-shadow: 0 6px 18px rgba(0, 123, 255, 0.35) !important;
+    transition: all 0.25s ease;
+  }
+  .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 123, 255, 0.5) !important;
+  }
+  .btn-save:active {
+    transform: translateY(0);
+  }
+
+  .btn-cancel {
+    background-color: #f1f3f5;
+    color: #495057 !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    transition: all 0.25s ease;
+  }
+  .btn-cancel:hover {
+    background-color: #e9ecef;
+  }
+
+  .bg-white-15 {
+    background-color: var(--white-15);
+  }
+  .text-white-75 {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  /* Utilitaires typographie */
+  .font-size-xs { font-size: 0.75rem; }
+  .font-size-sm { font-size: 0.9rem; }
+  .font-size-lg-2 { font-size: 1.75rem; }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const fileInput = document.getElementById("{{ form.profile_photo.id_for_label }}");
+    const imagePreview = document.getElementById("imagePreview");
+    const avatarFallback = document.getElementById("avatarFallback");
+    const fileSelectedName = document.getElementById("fileSelectedName");
+
+    if (fileInput) {
+      fileInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          // Afficher le nom du fichier
+          fileSelectedName.textContent = "Fichier sélectionné : " + file.name;
+          
+          // Prévisualisation de l'image
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            imagePreview.src = event.target.result;
+            imagePreview.classList.remove("d-none");
+            if (avatarFallback) {
+              avatarFallback.classList.add("d-none");
+            }
+          };
+          reader.readAsDataURL(file);
+        } else {
+          fileSelectedName.textContent = "";
+          imagePreview.src = "";
+          imagePreview.classList.add("d-none");
+          if (avatarFallback) {
+            avatarFallback.classList.remove("d-none");
+          }
+        }
+      });
+    }
+  });
+</script>
 {% endblock %}

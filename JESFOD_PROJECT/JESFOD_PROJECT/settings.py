@@ -14,7 +14,14 @@ TEMPLATES_DIR = BASE_DIR / 'JESFOD_PROJECT' / 'templates'
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['https://jesfodfona.pythonanywhere.com/']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'f8a1-129-0-60-54.ngrok-free.app',
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://f8a1-129-0-60-54.ngrok-free.app",
+]
 
 # ---------------------
 # Applications
@@ -99,7 +106,7 @@ TEMPLATES = [
 # Static & Media
 # ---------------------
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'JESFOD_PROJECT' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 

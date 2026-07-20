@@ -54,32 +54,36 @@ function initHeroSlideshow() {
   */
 }
 
+// JESFOD Premium JS
 document.addEventListener('DOMContentLoaded', function() {
   initHeroSlideshow();
-  
-  // Smooth scrolling
-  document.querySelectorAll('a[href^=\"#\"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+
+  // ---- Navbar scroll effect ----
+  const navbar = document.getElementById('mainNav');
+  if (navbar) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 60) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
       }
     });
-  });
+  }
 
-  // Navbar scroll effect
-  window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-      navbar.style.background = 'rgba(40,167,69,0.95)';
-      navbar.style.backdropFilter = 'blur(10px)';
-    } else {
-      navbar.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-    }
+  // Smooth scrolling for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href.length > 1) {
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          const offset = 80; // navbar height
+          const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      }
+    });
   });
 
   // Animate stats counters

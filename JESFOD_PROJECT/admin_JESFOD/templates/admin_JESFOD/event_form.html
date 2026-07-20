@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Créer un Événement - JESFOD{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-lg border-0 rounded-4 overflow-hidden animate__animated animate__fadeInUp">
+        <div class="card-header bg-primary text-white py-4 text-center">
+          <i class="bi bi-calendar-event fs-1 mb-2"></i>
+          <h2 class="fw-bold mb-0">Créer un Nouvel Événement</h2>
+        </div>
+        <div class="card-body p-4 p-md-5">
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+              <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">Titre de l'événement</label>
+              {{ form.title }}
+              {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.as_text }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">Description</label>
+              {{ form.description }}
+              {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.as_text }}</div>{% endif %}
+            </div>
+
+            <div class="row g-4 mb-4">
+              <div class="col-md-6">
+                <label for="{{ form.location.id_for_label }}" class="form-label fw-semibold">Lieu</label>
+                {{ form.location }}
+                {% if form.location.errors %}<div class="text-danger small mt-1">{{ form.location.errors.as_text }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.event_date.id_for_label }}" class="form-label fw-semibold">Date et Heure</label>
+                {{ form.event_date }}
+                {% if form.event_date.errors %}<div class="text-danger small mt-1">{{ form.event_date.errors.as_text }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="{{ form.image.id_for_label }}" class="form-label fw-semibold">Image de couverture</label>
+              {{ form.image }}
+              {% if form.image.errors %}<div class="text-danger small mt-1">{{ form.image.errors.as_text }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4 form-check form-switch">
+              {{ form.is_published }}
+              <label class="form-check-label fw-semibold ms-2" for="{{ form.is_published.id_for_label }}">Publier immédiatement</label>
+            </div>
+
+            <div class="d-flex gap-3 justify-content-end mt-5">
+              <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">Annuler</a>
+              <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold">Créer l'événement</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

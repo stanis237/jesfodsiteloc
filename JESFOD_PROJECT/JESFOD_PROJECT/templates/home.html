@@ -2,148 +2,271 @@
 {% load static %}
 
 {% block title %}Accueil - Présentation JESFOD Association Jeunes Fonakeukeur Douala{% endblock %}
-
 {% block meta_description %}Accueil JESFOD - Découvrez le bureau exécutif, dernières actualités, galerie photos et activités de l'association des jeunes solidaires de Fonakeukeur Douala. Rejoignez-nous !{% endblock %}
-
 {% block og_title %}Accueil - JESFOD{% endblock %}
 {% block og_description %}Découvrez JESFOD : Bureau exécutif, actualités et galerie de l'association des jeunes de Fonakeukeur Douala. Éducation et solidarité.{% endblock %}
 {% block og_image %}{% static 'images/cp4.jpg' %}{% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <div class="hero-slideshow text-center py-5 animate__animated animate__fadeIn">
-            <div class="hero-slide"></div>
-            <div class="hero-slide"></div>
-            <div class="hero-slide"></div>
-            <div class="hero-slide"></div>
-            <div class="hero-content">
-                <h1 class="display-4 fw-bold mb-4">Bienvenue à la JESFOD</h1>
-                <p class="lead mb-4">Association solidaire des Jeunes de Fonakeukeur de Douala</p>
-                <div class="hero-buttons d-flex flex-column flex-sm-row justify-content-center gap-3">
-                    {% if not user.is_authenticated %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Se connecter</a>
-                    <a href="{% url 'register' %}" class="btn btn-light btn-lg">S'inscrire</a>
-                    {% else %}
-                      <a href="{% url 'member_dashboard' %}" class="btn btn-success btn-lg">Mon Dashboard</a>
-                      <a href="/adminjesfod/" class="btn btn-light btn-lg text-primary">Admin JESFOD</a>
-                    {% endif %}
+
+<!-- ==================== HERO LANDING ==================== -->
+<div class="photo-landing-wrapper">
+    <div class="photo-landing-bg">
+        {% if galleries %}
+            {% for gallery in galleries|slice:":8" %}
+                {% if gallery.image %}
+                    <img src="{{ gallery.image.url }}" class="photo-landing-item" alt="JESFOD Photo">
+                {% else %}
+                    <div class="photo-landing-item photo-placeholder"></div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="photo-landing-item photo-placeholder"></div>
+            <div class="photo-landing-item photo-placeholder"></div>
+            <div class="photo-landing-item photo-placeholder"></div>
+            <div class="photo-landing-item photo-placeholder"></div>
+            <div class="photo-landing-item photo-placeholder"></div>
+            <div class="photo-landing-item photo-placeholder"></div>
+            <div class="photo-landing-item photo-placeholder"></div>
+            <div class="photo-landing-item photo-placeholder"></div>
+        {% endif %}
+    </div>
+    <div class="photo-landing-overlay"></div>
+
+    <div class="glass-hero-content">
+        <span class="hero-badge mb-3 d-inline-block">🌍 Fonakeukeur · Douala · Cameroun</span>
+        <h1 class="display-3 fw-black mb-3">Bienvenue à la <br><span class="hero-brand-text">JESFOD</span></h1>
+        <p class="lead mb-4 hero-subtitle">Association solidaire des Jeunes de Fonakeukeur de Douala.<br>
+            <em>Agir local, penser global.</em></p>
+        <div class="hero-buttons d-flex flex-column flex-sm-row justify-content-center gap-3">
+            {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-hero-primary btn-lg px-5 rounded-pill">
+                <i class="bi bi-person-plus me-2"></i>Rejoindre JESFOD
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-hero-outline btn-lg px-5 rounded-pill">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Connexion
+            </a>
+            {% else %}
+            <a href="{% url 'member_dashboard' %}" class="btn btn-hero-primary btn-lg px-5 rounded-pill">
+                <i class="bi bi-speedometer2 me-2"></i>Mon Dashboard
+            </a>
+            <a href="#bureau" class="btn btn-hero-outline btn-lg px-5 rounded-pill">
+                <i class="bi bi-people me-2"></i>Notre Bureau
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="hero-scroll-hint">
+        <i class="bi bi-chevron-double-down"></i>
+    </div>
+</div>
+
+<!-- ==================== MEMBRE CONNECTÉ ==================== -->
+{% if user.is_authenticated and member %}
+<section class="container py-5">
+    <div class="welcome-member-card mx-auto">
+        <div class="d-flex align-items-center gap-4">
+            {% if member.profile_photo %}
+            <img src="{{ member.profile_photo.url }}" alt="{{ member.name }}" class="welcome-avatar">
+            {% else %}
+            <div class="welcome-avatar-fallback">{{ member.name.0|upper }}</div>
+            {% endif %}
+            <div class="flex-grow-1">
+                <p class="text-muted small mb-1 text-uppercase fw-semibold ls-1">Connecté en tant que</p>
+                <h4 class="fw-bold mb-1">{{ member.name }}</h4>
+                <span class="badge rounded-pill role-badge">{{ member.get_role_display }}</span>
+            </div>
+            <a href="{% url 'member_dashboard' %}" class="btn btn-primary rounded-pill px-4 d-none d-md-flex align-items-center gap-2">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ==================== STATS RAPIDES ==================== -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="row g-4 justify-content-center text-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-people-fill stat-icon text-primary"></i>
+                    <div class="stat-number">{{ total_members }}</div>
+                    <div class="stat-label">Membres actifs</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-calendar-event-fill stat-icon text-success"></i>
+                    <div class="stat-number">5+</div>
+                    <div class="stat-label">Années d'existence</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-newspaper stat-icon text-warning"></i>
+                    <div class="stat-number">{{ total_news }}</div>
+                    <div class="stat-label">Actualités publiées</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-heart-fill stat-icon text-danger"></i>
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Solidarité</div>
                 </div>
             </div>
         </div>
-        {% if user.is_authenticated and member %}
-        <div class="card profile-welcome-card shadow-lg border-0 p-4 mx-auto" style="max-width: 950px;">
-          <div class="d-flex flex-column flex-md-row align-items-center gap-4 justify-content-center">
-              {% if member.profile_photo %}
-              <img src="{{ member.profile_photo.url }}" alt="Photo de profil de {{ member.name }} membre JESFOD" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover; border: 5px solid #ffffff;">
-              {% else %}
-              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow" style="width: 120px; height: 120px; font-size: 3rem;">
-                {{ member.name.0|upper }}
-              </div>
-              {% endif %}
-              <div class="text-center text-md-start">
-                <h3 class="mb-1 text-dark">Bienvenue, {{ member.name }}</h3>
-                <p class="mb-2 text-muted">Rôle : {{ member.get_role_display }}</p>
-                <a href="{% url 'member_dashboard' %}" class="btn btn-primary btn-lg">Accéder au tableau de bord</a>
-              </div>
+    </div>
+</section>
+
+<!-- ==================== BUREAU EXÉCUTIF ==================== -->
+<section id="bureau" class="section-block bg-white py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-tag">Notre équipe</span>
+            <h2 class="section-title fw-black mt-2">Bureau Exécutif JESFOD</h2>
+            <div class="title-underline mx-auto"></div>
+        </div>
+
+        {% if bureau_members %}
+        <div class="row g-4 justify-content-center">
+            {% for member in bureau_members %}
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="bureau-card h-100">
+                    <div class="bureau-card-top">
+                        {% if member.profile_photo %}
+                        <img src="{{ member.profile_photo.url }}" alt="{{ member.name }}" class="bureau-avatar">
+                        {% else %}
+                        <div class="bureau-avatar bureau-avatar-fallback">{{ member.name.0|upper }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="bureau-card-body text-center p-4">
+                        <h5 class="fw-bold mb-1">{{ member.name }}</h5>
+                        <span class="badge rounded-pill bureau-role-badge mb-2">{{ member.get_role_display }}</span>
+                        {% if member.email %}
+                        <p class="text-muted small mb-1"><i class="bi bi-envelope me-1"></i>{{ member.email }}</p>
+                        {% endif %}
+                        {% if member.phone %}
+                        <p class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i>{{ member.phone }}</p>
+                        {% endif %}
+                        {% if member.activities %}
+                        <p class="text-success small fst-italic mt-2 mb-0">{{ member.activities|truncatewords:10 }}</p>
+                        {% endif %}
+                        {% if member.is_certified %}
+                        <div class="certified-badge mt-2"><i class="bi bi-patch-check-fill me-1"></i>Certifié</div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-          </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state text-center py-5">
+            <i class="bi bi-people fs-1 text-muted"></i>
+            <p class="text-muted mt-3">Aucun membre de bureau enregistré pour le moment.</p>
         </div>
         {% endif %}
 
-        <!-- Bureau Members Section -->
-        <section id="bureau" class="py-5 bg-light">
-          <div class="container">
-            <h2 class="section-title text-center mb-5">Bureau Exécutif JESFOD</h2>
-            {% if bureau_members %}
-            <div class="row g-4">
-              {% for member in bureau_members %}
-              <div class="col-lg-4 col-md-6">
-                <div class="card h-100 shadow-sm border border-primary border-2 rounded-4">
-                  <div class="card-body text-center p-4">
-
-{% if member.profile_photo %}
-  <img src="{{ member.profile_photo.url }}" alt="{{ member.name }} - {{ member.get_role_display }} JESFOD" class="rounded-circle mb-3 mx-auto shadow border border-primary" style="width: 100px; height: 100px; object-fit: cover; border-width: 3px;">
-{% else %}
-  <div class="avatar mb-3 mx-auto rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; font-size: 1.5rem; border: 3px solid #0d6efd;">
-    {{ member.name.0|upper }}
-  </div>
-{% endif %}
-
-                    <h5 class="card-title">{{ member.name }}</h5>
-                    <p class="card-text text-primary fw-bold">{{ member.get_role_display }}</p>
-                    <p class="text-muted small">{{ member.email }}</p>
-
-                    {% if member.phone %}
-                    <p class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ member.phone }}</p>
-                    {% endif %}
-                    {% if member.activities %}
-                    <p class="text-success small fw-semibold fst-italic">{{ member.activities|truncatewords:10 }}</p>
-                    {% endif %}
-
-                  </div>
-                </div>
-              </div>
-              {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center">
-              <p class="text-muted">Aucun membre de bureau enregistré pour le moment.</p>
-            </div>
-            {% endif %}
-            <div class="text-center mt-4">
-              <a href="{% url 'register' %}" class="btn btn-outline-primary">Rejoindre le bureau</a>
-            </div>
-          </div>
-        </section>
-
-        <!-- News Section -->
-        <section id="news" class="py-5 bg-light">
-          <div class="container">
-            <h2 class="section-title text-center mb-5">Actualités</h2>
-            <div class="row g-4">
-              {% for item in news %}
-              <div class="col-md-4">
-                <div class="card custom-card news-card h-100">
-                  {% if item.image %}
-                  <img src="{{ item.image.url }}" class="card-img-top" alt="Actualité {{ item.title }} JESFOD">
-                  {% endif %}
-                  <div class="card-body">
-                    <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">{{ item.content|truncatechars:100 }}</p>
-                    <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
-                  </div>
-                </div>
-              </div>
-              {% empty %}
-              <p class="text-center">Aucune actualité pour le moment.</p>
-              {% endfor %}
-            </div>
-          </div>
-        </section>
-
-        <!-- Gallery Section -->
-        <section id="galerie" class="py-5 bg-white">
-          <div class="container">
-            <h2 class="section-title text-center mb-5">Galerie</h2>
-            <div class="row g-4">
-              {% for item in galleries %}
-              <div class="col-md-4">
-                <div class="card custom-card gallery-card h-100">
-                  {% if item.image %}
-                  <img src="{{ item.image.url }}" class="card-img-top" alt="Galerie {{ item.title }} JESFOD">
-                  {% endif %}
-                  <div class="card-body">
-                    <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">{{ item.description|truncatechars:100 }}</p>
-                    <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
-                  </div>
-                </div>
-              </div>
-              {% empty %}
-              <p class="text-center">Aucune galerie pour le moment.</p>
-              {% endfor %}
-            </div>
-          </div>
-        </section>
+        <div class="text-center mt-5">
+            <a href="{% url 'register' %}" class="btn btn-outline-primary rounded-pill px-5 fw-semibold">
+                <i class="bi bi-person-plus me-2"></i>Rejoindre le bureau
+            </a>
+        </div>
     </div>
+</section>
+
+<!-- ==================== ACTUALITÉS ==================== -->
+<section id="news" class="section-block bg-light py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-tag">Ce qui se passe</span>
+            <h2 class="section-title fw-black mt-2">Actualités JESFOD</h2>
+            <div class="title-underline mx-auto"></div>
+        </div>
+
+        <div class="row g-4">
+            {% for item in news %}
+            <div class="col-lg-4 col-md-6">
+                <div class="news-card-premium h-100">
+                    {% if item.image %}
+                    <div class="news-img-wrapper">
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}" class="news-img">
+                        <div class="news-img-overlay"></div>
+                        <span class="news-date-badge">{{ item.created_date|date:"d M Y" }}</span>
+                    </div>
+                    {% else %}
+                    <div class="news-img-wrapper news-img-placeholder">
+                        <i class="bi bi-newspaper fs-1 text-muted"></i>
+                        <span class="news-date-badge">{{ item.created_date|date:"d M Y" }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="news-card-content p-4">
+                        <h5 class="fw-bold mb-2 news-card-title">{{ item.title }}</h5>
+                        <p class="text-muted small mb-3">{{ item.content|truncatechars:120 }}</p>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'news_detail' item.pk %}" class="btn btn-sm btn-primary rounded-pill px-4">
+                            Lire la suite <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-newspaper fs-1 text-muted"></i>
+                <p class="text-muted mt-3">Aucune actualité pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="text-center mt-5">
+            <a href="{% url 'news_list' %}" class="btn btn-outline-primary rounded-pill px-5 fw-semibold">
+                <i class="bi bi-newspaper me-2"></i>Toutes les actualités
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ==================== GALERIE ==================== -->
+<section id="galerie" class="section-block bg-white py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-tag">Nos moments</span>
+            <h2 class="section-title fw-black mt-2">Galerie Photos</h2>
+            <div class="title-underline mx-auto"></div>
+        </div>
+
+        <div class="gallery-masonry row g-3">
+            {% for item in galleries %}
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-card-premium">
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}" class="gallery-img">
+                    {% else %}
+                    <div class="gallery-img-placeholder"><i class="bi bi-image fs-1 text-muted"></i></div>
+                    {% endif %}
+                    <div class="gallery-hover-info">
+                        <h6 class="fw-bold text-white mb-1">{{ item.title }}</h6>
+                        {% if item.description %}
+                        <p class="text-white-50 small mb-0">{{ item.description|truncatechars:60 }}</p>
+                        {% endif %}
+                        <small class="text-white-50">{{ item.created_date|date:"d M Y" }}</small>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-images fs-1 text-muted"></i>
+                <p class="text-muted mt-3">Aucune galerie pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
 {% endblock %}

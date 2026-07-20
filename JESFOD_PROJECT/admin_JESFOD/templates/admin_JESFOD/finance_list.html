@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}Gestion Financière - JESFOD{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-black mb-1">Gestion Financière</h2>
+      <p class="text-muted mb-0">Suivi des cotisations, FDR, amendes et tontine</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'finance_create' %}" class="btn btn-primary rounded-pill px-4 fw-semibold">
+        <i class="bi bi-plus-circle me-2"></i>Nouvelle Entrée
+      </a>
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">
+        <i class="bi bi-arrow-left me-2"></i>Tableau de bord
+      </a>
+    </div>
+  </div>
+
+  <!-- Finance Totals -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 text-center py-3 px-2" style="border-top: 3px solid #007bff !important;">
+        <div class="fw-bold text-primary fs-4">{{ total_inscriptions|floatformat:0 }} FCFA</div>
+        <div class="text-muted small">💰 Inscriptions perçues</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 text-center py-3 px-2" style="border-top: 3px solid #198754 !important;">
+        <div class="fw-bold text-success fs-4">{{ total_fdr|floatformat:0 }} FCFA</div>
+        <div class="text-muted small">🔄 Fonds de Roulement</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 text-center py-3 px-2" style="border-top: 3px solid #dc3545 !important;">
+        <div class="fw-bold text-danger fs-4">{{ total_amendes_collected|floatformat:0 }} FCFA</div>
+        <div class="text-muted small">⚠️ Amendes perçues</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 text-center py-3 px-2" style="border-top: 3px solid #fd7e14 !important;">
+        <div class="fw-bold text-warning fs-4">{{ total_tontine|floatformat:0 }} FCFA</div>
+        <div class="text-muted small">🤝 Tontine collectée</div>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 mb-3">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Main Table -->
+  <div class="card border-0 shadow rounded-4 overflow-hidden">
+    <div class="card-header bg-dark text-white py-3 px-4 d-flex align-items-center gap-3">
+      <i class="bi bi-table fs-5"></i>
+      <span class="fw-semibold fs-6">Tableau de Bord Financier des Membres</span>
+      <span class="badge bg-secondary ms-auto">{{ members|length }} membres</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="finance-table">
+        <thead class="table-dark">
+          <tr>
+            <th class="ps-4">N°</th>
+            <th>Nom &amp; Prénom</th>
+            <th>Téléphone</th>
+            <th class="text-center">Inscription <small class="opacity-75">(500 FCFA)</small></th>
+            <th class="text-center">FDR Versé</th>
+            <th class="text-center">Amendes Dues</th>
+            <th class="text-center">Tontine</th>
+            <th class="text-center">Situation</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in members %}
+          <tr class="{% if member.situation == 'pas_a_jour' %}table-warning{% endif %}">
+            <td class="ps-4 fw-bold text-muted">{{ forloop.counter }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                {% if member.profile_photo %}
+                  <img src="{{ member.profile_photo.url }}" alt="{{ member.name }}"
+                       class="rounded-circle" style="width:38px;height:38px;object-fit:cover;">
+                {% else %}
+                  <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                       style="width:38px;height:38px;background:linear-gradient(135deg,#007bff,#6610f2);font-size:0.9rem;">
+                    {{ member.name.0|upper }}
+                  </div>
+                {% endif %}
+                <div>
+                  <div class="fw-semibold">{{ member.name }}</div>
+                  <div class="text-muted small">{{ member.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-muted">{{ member.phone|default:"—" }}</td>
+
+            <!-- Inscription -->
+            <td class="text-center">
+              {% if member.inscription_paid %}
+                <span class="badge bg-success px-3 py-2 rounded-pill">
+                  <i class="bi bi-check2 me-1"></i>500 FCFA
+                </span>
+              {% else %}
+                <form method="post" action="{% url 'finance_create' %}" class="d-inline">
+                  {% csrf_token %}
+                  <button type="button"
+                    onclick="quickPayInscrip({{ member.pk }})"
+                    class="badge bg-danger border-0 px-3 py-2 rounded-pill" style="cursor:pointer;">
+                    <i class="bi bi-x me-1"></i>Pas payé
+                  </button>
+                </form>
+                <a href="{% url 'finance_create' %}?member={{ member.pk }}&type=inscription"
+                   class="btn btn-sm btn-outline-success ms-1 rounded-pill" style="font-size:0.7rem;">
+                  <i class="bi bi-plus"></i> Marquer payé
+                </a>
+              {% endif %}
+            </td>
+
+            <!-- FDR -->
+            <td class="text-center fw-semibold {% if member.total_fdr > 0 %}text-success{% else %}text-muted{% endif %}">
+              {{ member.total_fdr|floatformat:0 }} FCFA
+              <br>
+              <a href="{% url 'finance_create' %}?member={{ member.pk }}&type=fdr"
+                 class="btn btn-sm btn-outline-primary rounded-pill mt-1" style="font-size:0.65rem;">
+                <i class="bi bi-plus"></i>
+              </a>
+            </td>
+
+            <!-- Amendes -->
+            <td class="text-center fw-semibold {% if member.total_amendes > 0 %}text-danger{% else %}text-muted{% endif %}">
+              {% if member.total_amendes > 0 %}
+                <span class="badge bg-danger px-2">{{ member.total_amendes|floatformat:0 }} FCFA</span>
+              {% else %}
+                <span class="text-success"><i class="bi bi-check2"></i> Aucune</span>
+              {% endif %}
+              <br>
+              <a href="{% url 'finance_create' %}?member={{ member.pk }}&type=amande"
+                 class="btn btn-sm btn-outline-danger rounded-pill mt-1" style="font-size:0.65rem;">
+                <i class="bi bi-plus"></i>
+              </a>
+            </td>
+
+            <!-- Tontine -->
+            <td class="text-center fw-semibold {% if member.total_tontine > 0 %}text-warning{% else %}text-muted{% endif %}">
+              {{ member.total_tontine|floatformat:0 }} FCFA
+              <br>
+              <a href="{% url 'finance_create' %}?member={{ member.pk }}&type=tontine"
+                 class="btn btn-sm btn-outline-warning rounded-pill mt-1" style="font-size:0.65rem;">
+                <i class="bi bi-plus"></i>
+              </a>
+            </td>
+
+            <!-- Situation -->
+            <td class="text-center">
+              {% if member.situation == 'a_jour' %}
+                <span class="badge bg-success px-3 py-2 rounded-pill fw-semibold">
+                  <i class="bi bi-check-circle me-1"></i>À JOUR
+                </span>
+              {% else %}
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-semibold">
+                  <i class="bi bi-exclamation-circle me-1"></i>PAS À JOUR
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Actions -->
+            <td class="text-center">
+              <a href="{% url 'finance_create' %}?member={{ member.pk }}"
+                 class="btn btn-sm btn-primary rounded-circle" title="Ajouter entrée" style="width:32px;height:32px;padding:0;line-height:32px;">
+                <i class="bi bi-plus-lg"></i>
+              </a>
+              <a href="{% url 'member_update' member.pk %}"
+                 class="btn btn-sm btn-outline-secondary rounded-circle" title="Modifier membre" style="width:32px;height:32px;padding:0;line-height:32px;">
+                <i class="bi bi-pencil"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center py-5 text-muted">
+              <i class="bi bi-people fs-1 d-block mb-2"></i>
+              Aucun membre enregistré.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <!-- Totals row -->
+        <tfoot class="table-dark">
+          <tr>
+            <td colspan="3" class="fw-bold ps-4">TOTAUX</td>
+            <td class="text-center fw-bold text-success">{{ total_inscriptions|floatformat:0 }} FCFA</td>
+            <td class="text-center fw-bold text-success">{{ total_fdr|floatformat:0 }} FCFA</td>
+            <td class="text-center fw-bold text-danger">{{ total_amendes_collected|floatformat:0 }} FCFA</td>
+            <td class="text-center fw-bold text-warning">{{ total_tontine|floatformat:0 }} FCFA</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

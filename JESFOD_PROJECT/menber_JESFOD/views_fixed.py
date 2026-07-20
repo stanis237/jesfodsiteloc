@@ -1,17 +1,17 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import views as auth_views
 from django.contrib import messages
-from django.contrib.auth.forms import AuthenticationForm
-from django.views.generic import CreateView, UpdateView, DetailView
+from django.views.generic import DetailView
 from django.utils import timezone
-from django.core.mail import send_mail
-from django.conf import settings
-from .forms import MemberForm, CustomLoginForm, CustomRegisterForm, NewsForm
-from .models import Member, News
+from .forms import MemberForm, CustomLoginForm, CustomRegisterForm
+from .models import Member, News, Event, FinanceEntry
 from admin_JESFOD.models import Gallery
 
+
+# ------------------------------------------------------------------ #
+#  Internal helper: handle login on POST                             #
+# ------------------------------------------------------------------ #
 def _handle_login(request):
     if request.method != 'POST':
         return None
@@ -23,70 +23,89 @@ def _handle_login(request):
     user = authenticate(request, username=username, password=password)
     if user is not None:
         login(request, user)
-        member, created = Member.objects.get_or_create(user=user)
-        if not member.is_certified:
-            messages.info(request, 'Veuillez certifier votre profil.')
+        member, _ = Member.objects.get_or_create(user=user)
         if member.is_bureau:
             return redirect('admin_dashboard')
         return redirect('member_dashboard')
     messages.error(request, 'Identifiants invalides.')
     return None
 
+
+# ------------------------------------------------------------------ #
+#  HOME PAGE                                                          #
+# ------------------------------------------------------------------ #
 def home(request):
     login_result = _handle_login(request)
     if login_result:
         return login_result
+
     member = None
     if request.user.is_authenticated:
         member, _ = Member.objects.get_or_create(user=request.user)
-    bureau_members = Member.objects.filter(role='bureau')[:6]
+
+    # Bureau sorted by position rank
+    POSITION_ORDER = {
+        'president': 1, 'vice_president': 2, 'secretaire_general': 3,
+        'secretaire_adjoint': 4, 'tresorier': 5, 'tresorier_adjoint': 6,
+        'charge_com': 7, 'conseiller': 8, 'membre': 9,
+    }
+    bureau_qs = list(Member.objects.filter(role='bureau'))
+    bureau_members = sorted(bureau_qs, key=lambda m: POSITION_ORDER.get(m.position, 99))[:8]
+
     news = News.objects.filter(is_published=True)[:5]
     galleries = Gallery.objects.filter(is_published=True)[:5]
+    events = Event.objects.filter(is_published=True, event_date__gte=timezone.now()).order_by('event_date')[:6]
+    total_members = Member.objects.count()
+    total_news = News.objects.filter(is_published=True).count()
+
     return render(request, 'home.html', {
         'member': member,
         'bureau_members': bureau_members,
         'news': news,
-        'galleries': galleries
+        'galleries': galleries,
+        'events': events,
+        'total_members': total_members,
+        'total_news': total_news,
     })
 
+
+# ------------------------------------------------------------------ #
+#  AUTH                                                               #
+# ------------------------------------------------------------------ #
 def custom_login(request):
     login_result = _handle_login(request)
     if login_result:
         return login_result
-    if request.method == 'POST':
-        form = CustomLoginForm(request.POST)
-    else:
-        form = CustomLoginForm()
+    form = CustomLoginForm(request.POST if request.method == 'POST' else None)
     return render(request, 'menber_JESFOD/login.html', {'form': form})
 
+
 def register(request):
-    print('=== REGISTER DEBUG ===')
-    print('Method:', request.method)
-    print('CSRF Cookie:', request.COOKIES.get('csrftoken'))
-    print('CSRF Token in POST:', request.POST.get('csrfmiddlewaretoken'))
-    print('User:', request.user)
     if request.method == 'POST':
-        print('POST data keys:', list(request.POST.keys()))
-        print('FILES:', list(request.FILES.keys()))
         form = CustomRegisterForm(request.POST, request.FILES)
-        print('Form valid:', form.is_valid())
-        print('Form errors:', form.errors)
-        print('Non-form errors:', form.non_field_errors())
         if form.is_valid():
             user = form.save()
             login(request, user)
             member = Member.objects.get(user=user)
+            # Auto-create inscription finance entry (unpaid by default)
+            FinanceEntry.objects.get_or_create(
+                member=member,
+                type='inscription',
+                defaults={'amount': 500, 'is_paid': False}
+            )
             if member.role == 'bureau':
                 return redirect('admin_dashboard')
-            else:
-                return redirect('member_dashboard')
+            return redirect('member_dashboard')
         else:
             messages.error(request, 'Erreur dans le formulaire. Corrigez les erreurs.')
     else:
         form = CustomRegisterForm()
-    print('Rendering form')
     return render(request, 'menber_JESFOD/register.html', {'form': form})
 
+
+# ------------------------------------------------------------------ #
+#  MEMBER DASHBOARD                                                   #
+# ------------------------------------------------------------------ #
 @login_required
 def member_dashboard(request):
     member, created = Member.objects.get_or_create(user=request.user)
@@ -94,37 +113,75 @@ def member_dashboard(request):
         return redirect('admin_dashboard')
     if created:
         messages.info(request, 'Profil membre créé. Complétez vos informations.')
-    total_members = Member.objects.count()
-    total_news = News.objects.count()
-    
+        FinanceEntry.objects.get_or_create(
+            member=member,
+            type='inscription',
+            defaults={'amount': 500, 'is_paid': False}
+        )
+
+    # Profile edit
     if request.method == 'POST' and 'edit_profile' in request.POST:
         form = MemberForm(request.POST, request.FILES, instance=member)
         if form.is_valid():
             form.save()
             messages.success(request, 'Profil mis à jour !')
         else:
-            messages.error(request, 'Erreur mise à jour.')
+            messages.error(request, 'Erreur lors de la mise à jour.')
     else:
         form = MemberForm(instance=member)
-    
-    news_list = News.objects.filter(is_published=True)[:5]
+
+    # Finance data
+    finances = member.finances.all()
+    inscription_entry = finances.filter(type='inscription').first()
+    fdr_entries = finances.filter(type='fdr').order_by('-created_date')
+    amande_entries = finances.filter(type='amande', is_paid=False).order_by('-created_date')
+    tontine_entries = finances.filter(type='tontine').order_by('-created_date')
+
+    # Stats
+    total_members = Member.objects.count()
+    total_news = News.objects.filter(is_published=True).count()
+
+    # Upcoming events
+    upcoming_events = Event.objects.filter(
+        is_published=True, event_date__gte=timezone.now()
+    ).order_by('event_date')[:3]
+
+    # Recent news
+    news_list = News.objects.filter(is_published=True)[:4]
+
     context = {
         'member': member,
-        'news_list': news_list,
+        'edit_form': form,
         'total_members': total_members,
         'total_news': total_news,
-        'edit_form': form,
-        'is_member_page': True
+        # Finance
+        'inscription_entry': inscription_entry,
+        'fdr_entries': fdr_entries,
+        'amande_entries': amande_entries,
+        'tontine_entries': tontine_entries,
+        'total_fdr': member.total_fdr,
+        'total_amendes': member.total_amendes,
+        'total_tontine': member.total_tontine,
+        'situation': member.situation,
+        # Content
+        'upcoming_events': upcoming_events,
+        'news_list': news_list,
+        'is_member_page': True,
     }
     return render(request, 'menber_JESFOD/dashboard.html', context)
 
+
+# ------------------------------------------------------------------ #
+#  CERTIFICATION                                                      #
+# ------------------------------------------------------------------ #
 @login_required
 def certification(request):
     member, created = Member.objects.get_or_create(user=request.user)
     if created:
-        messages.info(request, 'Profil membre créé. Complétez vos informations.')
+        messages.info(request, 'Profil membre créé.')
     if member.is_certified:
-        return render(request, 'menber_JESFOD/certification.html', {'member': member, 'already_certified': True})
+        return render(request, 'menber_JESFOD/certification.html',
+                      {'member': member, 'already_certified': True})
     if request.method == 'POST' and 'certify' in request.POST:
         if member.is_bureau:
             member.is_certified = True
@@ -134,66 +191,18 @@ def certification(request):
             return redirect('member_dashboard')
         else:
             messages.error(request, 'Seuls les membres du bureau peuvent être certifiés.')
-    return render(request, 'menber_JESFOD/certification.html', {'member': member, 'is_member_page': True})
+    return render(request, 'menber_JESFOD/certification.html',
+                  {'member': member, 'is_member_page': True})
 
+
+# ------------------------------------------------------------------ #
+#  NEWS                                                               #
+# ------------------------------------------------------------------ #
 @login_required
 def news_list(request):
-    member, _ = Member.objects.get_or_create(user=request.user)
     news = News.objects.filter(is_published=True).order_by('-created_date')
-    if not member.is_bureau:
-        pass
     return render(request, 'menber_JESFOD/news_list.html', {'news': news, 'is_member_page': True})
 
-@login_required
-def news_create(request):
-    member, _ = Member.objects.get_or_create(user=request.user)
-    if not member.is_bureau:
-        messages.error(request, 'Accès réservé au bureau.')
-        return redirect('news_list')
-    if request.method == 'POST':
-        form = NewsForm(request.POST, request.FILES)
-        if form.is_valid():
-            news = form.save(commit=False)
-            news.created_by = member.user
-            news.save()
-            messages.success(request, 'Actualité publiée !')
-            
-            if news.is_published:
-                members = Member.objects.all()
-                recipient_emails = [m.email for m in members if m.email]
-                
-                if recipient_emails:
-                    subject = f'Nouvelle actualité JESFOD: {news.title}'
-                    message = f"""
-Bonjour,
-
-Une nouvelle actualité a été publiée sur JESFOD:
-
-Titre: {news.title}
-
-{news.content[:200]}{'...' if len(news.content) > 200 else ''}
-
-Pour lire l'actualité complète, connectez-vous à votre compte JESFOD.
-
-Cordialement,
-L'équipe JESFOD
-                    """
-                    
-                    try:
-                        send_mail(
-                            subject,
-                            message,
-                            settings.EMAIL_HOST_USER,
-                            recipient_emails,
-                            fail_silently=True,
-                        )
-                    except Exception as e:
-                        print(f"Email sending failed: {e}")
-            
-            return redirect('news_list')
-    else:
-        form = NewsForm()
-    return render(request, 'menber_JESFOD/news_form.html', {'form': form, 'is_member_page': True})
 
 class NewsDetailView(DetailView):
     model = News
@@ -206,35 +215,14 @@ class NewsDetailView(DetailView):
         context['is_member_page'] = True
         return context
 
+
+# ------------------------------------------------------------------ #
+#  PROFILE                                                            #
+# ------------------------------------------------------------------ #
 class MemberDetailView(DetailView):
     model = Member
     template_name = 'menber_JESFOD/profile.html'
     context_object_name = 'member'
-
-    def get_object(self):
-        member = Member.objects.get(user=self.request.user)
-        return member
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['is_member_page'] = True
-        return context
-
-@login_required
-def member_activities(request):
-    member, _ = Member.objects.get_or_create(user=request.user)
-    activities = member.activities.split('\n') if member.activities else []
-    return render(request, 'menber_JESFOD/activities.html', {
-        'member': member,
-        'activities': activities,
-        'is_member_page': True
-    })
-
-class MemberUpdateView(UpdateView):
-    model = Member
-    form_class = MemberForm
-    template_name = 'menber_JESFOD/profile_form.html'
-    success_url = '/menber/profile/'
 
     def get_object(self):
         return Member.objects.get(user=self.request.user)
@@ -243,3 +231,17 @@ class MemberUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         context['is_member_page'] = True
         return context
+
+
+# ------------------------------------------------------------------ #
+#  ACTIVITIES                                                         #
+# ------------------------------------------------------------------ #
+@login_required
+def member_activities(request):
+    member, _ = Member.objects.get_or_create(user=request.user)
+    activities = member.activities.split('\n') if member.activities else []
+    return render(request, 'menber_JESFOD/activities.html', {
+        'member': member,
+        'activities': activities,
+        'is_member_page': True,
+    })

@@ -1,85 +1,155 @@
 {% extends 'base.html' %}
 {% block title %}Admin Dashboard - JESFOD{% endblock %}
 {% block content %}
-<div class="container mt-5">
-  <h2 class="mb-4">Tableau de Bord Bureau</h2>
-  <div class="d-flex flex-wrap gap-3 mb-4">
-    <a href="{% url 'member_list' %}" class="btn btn-primary">Gérer les Membres</a>
-    <a href="{% url 'pending_certifications' %}" class="btn btn-warning">Demandes de certification</a>
-    <a href="{% url 'news_create' %}" class="btn btn-success">Publier une actualité</a>
-    <a href="{% url 'gallery_create' %}" class="btn btn-info">Ajouter une galerie</a>
+<div class="container mt-5 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-black mb-0">Tableau de Bord Bureau</h2>
+    <span class="badge bg-primary px-3 py-2 rounded-pill fs-6"><i class="bi bi-shield-lock me-1"></i>Espace Modérateur</span>
   </div>
+
+  <div class="d-flex flex-wrap gap-3 mb-5">
+    <a href="{% url 'member_list' %}" class="btn btn-primary rounded-pill px-4 fw-semibold"><i class="bi bi-people me-2"></i>Gérer les Membres</a>
+    <a href="{% url 'pending_certifications' %}" class="btn btn-warning rounded-pill px-4 fw-semibold"><i class="bi bi-patch-check me-2"></i>Demandes de certification</a>
+    <a href="{% url 'news_create' %}" class="btn btn-success rounded-pill px-4 fw-semibold"><i class="bi bi-newspaper me-2"></i>Publier une actualité</a>
+    <a href="{% url 'event_create' %}" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;"><i class="bi bi-calendar-event me-2"></i>Créer un événement</a>
+    <a href="{% url 'gallery_create' %}" class="btn btn-info rounded-pill px-4 fw-semibold text-white"><i class="bi bi-images me-2"></i>Ajouter une galerie</a>
+    <a href="{% url 'finance_list' %}" class="btn btn-dark rounded-pill px-4 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Gestion Finances</a>
+  </div>
+
+  <div class="row g-4 mb-5 text-center">
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="card shadow border-0 h-100 rounded-3">
+        <div class="card-body">
+          <i class="bi bi-people-fill display-5 text-primary mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ total_members }}</h3>
+          <p class="text-muted small mb-0">Membres</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="card shadow border-0 h-100 rounded-3">
+        <div class="card-body">
+          <i class="bi bi-patch-check-fill display-5 text-success mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ certified_members }}</h3>
+          <p class="text-muted small mb-0">Certifiés</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="card shadow border-0 h-100 rounded-3">
+        <div class="card-body">
+          <i class="bi bi-star-fill display-5 text-warning mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ bureau_members }}</h3>
+          <p class="text-muted small mb-0">Bureau</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="card shadow border-0 h-100 rounded-3">
+        <div class="card-body">
+          <i class="bi bi-newspaper display-5 text-info mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ total_news }}</h3>
+          <p class="text-muted small mb-0">Actualités</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="card shadow border-0 h-100 rounded-3" style="border-top: 3px solid #6366f1 !important;">
+        <div class="card-body">
+          <i class="bi bi-calendar-check-fill display-5 mb-2" style="color: #6366f1;"></i>
+          <h3 class="fw-bold mb-1">{{ total_events }}</h3>
+          <p class="text-muted small mb-0">Événements</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Finance Stats -->
   <div class="row g-4 mb-5">
-    <div class="col-md-3">
-      <div class="card text-center shadow h-100">
-        <div class="card-body">
-          <i class="bi bi-people-fill display-4 text-primary mb-3"></i>
-          <h3>{{ total_members }}</h3>
-          <p class="text-muted">Membres Total</p>
+    <div class="col-12">
+      <h5 class="fw-bold mb-3"><i class="bi bi-wallet2 me-2 text-primary"></i>Aperçu Financier</h5>
+    </div>
+    <div class="col-xl-3 col-md-6 col-6">
+      <div class="card shadow border-0 h-100 rounded-3" style="border-left: 4px solid #28a745 !important;">
+        <div class="card-body text-center">
+          <i class="bi bi-cash-stack display-6 text-success mb-2"></i>
+          <h4 class="fw-bold mb-1">{{ total_inscriptions|default:"0" }} <small class="text-muted fw-normal" style="font-size: 0.6em;">FCFA</small></h4>
+          <p class="text-muted small mb-0">Inscriptions</p>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card text-center shadow h-100">
-        <div class="card-body">
-          <i class="bi bi-check-circle-fill display-4 text-success mb-3"></i>
-          <h3>{{ certified_members }}</h3>
-          <p class="text-muted">Certifiés</p>
-          <small class="text-muted d-block mt-2">Bureau validés</small>
+    <div class="col-xl-3 col-md-6 col-6">
+      <div class="card shadow border-0 h-100 rounded-3" style="border-left: 4px solid #007bff !important;">
+        <div class="card-body text-center">
+          <i class="bi bi-piggy-bank display-6 text-primary mb-2"></i>
+          <h4 class="fw-bold mb-1">{{ total_fdr|default:"0" }} <small class="text-muted fw-normal" style="font-size: 0.6em;">FCFA</small></h4>
+          <p class="text-muted small mb-0">Fonds de Roulement</p>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card text-center shadow h-100">
-        <div class="card-body">
-          <i class="bi bi-star-fill display-4 text-warning mb-3"></i>
-          <h3>{{ bureau_members }}</h3>
-          <p class="text-muted">Bureau</p>
+    <div class="col-xl-3 col-md-6 col-6">
+      <div class="card shadow border-0 h-100 rounded-3" style="border-left: 4px solid #dc3545 !important;">
+        <div class="card-body text-center">
+          <i class="bi bi-exclamation-triangle display-6 text-danger mb-2"></i>
+          <h4 class="fw-bold mb-1">{{ total_amendes|default:"0" }} <small class="text-muted fw-normal" style="font-size: 0.6em;">FCFA</small></h4>
+          <p class="text-muted small mb-0">Amendes</p>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card text-center shadow h-100">
-        <div class="card-body">
-          <i class="bi bi-newspaper display-4 text-info mb-3"></i>
-          <h3>{{ total_news }}</h3>
-          <p class="text-muted">Actualités</p>
+    <div class="col-xl-3 col-md-6 col-6">
+      <div class="card shadow border-0 h-100 rounded-3" style="border-left: 4px solid #6f42c1 !important;">
+        <div class="card-body text-center">
+          <i class="bi bi-circle-square display-6 mb-2" style="color: #6f42c1;"></i>
+          <h4 class="fw-bold mb-1">{{ total_tontine|default:"0" }} <small class="text-muted fw-normal" style="font-size: 0.6em;">FCFA</small></h4>
+          <p class="text-muted small mb-0">Tontine</p>
         </div>
       </div>
+    </div>
+    <div class="col-12 text-end">
+      <a href="{% url 'finance_list' %}" class="btn btn-outline-primary rounded-pill px-4 fw-semibold"><i class="bi bi-arrow-right me-2"></i>Voir toutes les finances</a>
     </div>
   </div>
-  <div class="row">
-    <div class="col-md-8">
-      <div class="card shadow">
-        <div class="card-header bg-dark text-white">
-          <h5>Nouveaux Membres Récents</h5>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-dark text-white py-3">
+          <h5 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2"></i>Membres Récents</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
           <ul class="list-group list-group-flush">
             {% for member in recent_members %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ member.name }} ({{ member.role }})
-                <span class="badge {{ member.is_certified|yesno:'bg-success,bg-warning' }}">{{ member.is_certified|yesno:'✓,?' }}</span>
+              <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <div>
+                  <span class="fw-semibold text-dark">{{ member.name }}</span>
+                  <span class="text-muted small ms-2">({{ member.get_role_display }})</span>
+                </div>
+                <span class="badge {% if member.is_certified %}bg-success{% else %}bg-warning text-dark{% endif %} rounded-pill px-3 py-1">
+                  {% if member.is_certified %}<i class="bi bi-check2 me-1"></i>Certifié{% else %}<i class="bi bi-question me-1"></i>En attente{% endif %}
+                </span>
               </li>
             {% empty %}
-              <li class="list-group-item text-muted">Aucun nouveau membre</li>
+              <li class="list-group-item text-muted py-4 text-center">Aucun membre inscrit récemment.</li>
             {% endfor %}
           </ul>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h5>Actions Rapides</h5>
+    <div class="col-lg-4">
+      <div class="card shadow border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white py-3">
+          <h5 class="mb-0 fw-semibold"><i class="bi bi-lightning-charge me-2"></i>Actions Rapides</h5>
         </div>
-        <div class="card-body">
-          <a href="{% url 'news_create' %}" class="btn btn-success w-100 mb-2">Nouvelle Actualité</a>
-          <a href="{% url 'gallery_create' %}" class="btn btn-info w-100 mb-2">Nouvelle Galerie</a>
-          <a href="{% url 'pending_certifications' %}" class="btn btn-warning w-100 mb-2">Demandes de certification</a>
-          <a href="{% url 'member_list' %}" class="btn btn-dark w-100 mb-2">Gérer Membres</a>
-          <a href="/admin/" class="btn btn-outline-primary w-100 mb-2">Administration Django</a>
-          <a href="{% url 'logout' %}" class="btn btn-secondary w-100">Déconnexion</a>
+        <div class="card-body p-4 d-grid gap-2">
+          <a href="{% url 'news_create' %}" class="btn btn-success rounded-pill mb-1 fw-semibold"><i class="bi bi-plus-circle me-2"></i>Nouvelle Actualité</a>
+          <a href="{% url 'event_create' %}" class="btn btn-primary rounded-pill mb-1 fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;"><i class="bi bi-plus-circle me-2"></i>Nouvel Événement</a>
+          <a href="{% url 'gallery_create' %}" class="btn btn-info text-white rounded-pill mb-1 fw-semibold"><i class="bi bi-plus-circle me-2"></i>Nouvelle Galerie</a>
+          <a href="{% url 'pending_certifications' %}" class="btn btn-warning rounded-pill mb-1 fw-semibold"><i class="bi bi-patch-check me-2"></i>Certifications</a>
+          <a href="{% url 'finance_list' %}" class="btn btn-dark rounded-pill mb-1 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Gestion Finances</a>
+          <a href="{% url 'finance_create' %}" class="btn btn-outline-success rounded-pill mb-1 fw-semibold"><i class="bi bi-plus-circle me-2"></i>Nouvelle Entrée Financière</a>
+          <a href="{% url 'member_list' %}" class="btn btn-dark rounded-pill mb-3 fw-semibold"><i class="bi bi-people me-2"></i>Gérer les Membres</a>
+          <a href="/admin/" class="btn btn-outline-primary rounded-pill mb-1 fw-semibold"><i class="bi bi-gear me-2"></i>Django Administration</a>
+          <a href="{% url 'logout' %}" class="btn btn-outline-danger rounded-pill fw-semibold"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a>
         </div>
       </div>
     </div>

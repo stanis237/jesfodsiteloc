@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}{{ title|default:"Entrée Financière" }} - Admin JESFOD{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 animate__animated animate__fadeIn">
+
+      <!-- Bouton Retour -->
+      <div class="mb-4">
+        <a href="{% url 'finance_list' %}" class="btn btn-link text-decoration-none p-0 d-inline-flex align-items-center text-primary fw-semibold" style="transition: transform 0.2s ease;">
+          <i class="bi bi-arrow-left me-2"></i>
+          Retour aux finances
+        </a>
+      </div>
+
+      <!-- Card Formulaire -->
+      <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 24px;">
+        <div class="card-header text-white p-4 text-center position-relative" style="background: linear-gradient(135deg, #1e3a5f 0%, #0d6efd 100%);">
+          <div class="position-relative" style="z-index: 1;">
+            <span class="badge rounded-pill mb-2 px-3 py-1" style="background-color: rgba(255,255,255,0.15); font-size: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase;">Gestion Financière</span>
+            <h3 class="mb-1 fw-bold">{{ title|default:"Entrée Financière" }}</h3>
+            <p class="mb-0 small" style="color: rgba(255,255,255,0.75);">Enregistrez un paiement ou une opération financière</p>
+          </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5 bg-white">
+          {% if form.errors %}
+          <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Erreur :</strong> Veuillez corriger les champs ci-dessous.
+            <ul class="mb-0 mt-2">
+              {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="row g-4">
+              <!-- Membre -->
+              <div class="col-md-6">
+                <label for="{{ form.member.id_for_label }}" class="form-label fw-semibold text-dark" style="font-size: 0.85rem;">Membre <span class="text-danger">*</span></label>
+                {{ form.member }}
+                {% if form.member.errors %}<div class="text-danger small mt-1">{{ form.member.errors.0 }}</div>{% endif %}
+              </div>
+
+              <!-- Type de paiement -->
+              <div class="col-md-6">
+                <label for="{{ form.type.id_for_label }}" class="form-label fw-semibold text-dark" style="font-size: 0.85rem;">Type de paiement <span class="text-danger">*</span></label>
+                {{ form.type }}
+                {% if form.type.errors %}<div class="text-danger small mt-1">{{ form.type.errors.0 }}</div>{% endif %}
+              </div>
+
+              <!-- Montant -->
+              <div class="col-md-6">
+                <label for="{{ form.amount.id_for_label }}" class="form-label fw-semibold text-dark" style="font-size: 0.85rem;">Montant (FCFA) <span class="text-danger">*</span></label>
+                {{ form.amount }}
+                {% if form.amount.errors %}<div class="text-danger small mt-1">{{ form.amount.errors.0 }}</div>{% endif %}
+              </div>
+
+              <!-- Période -->
+              <div class="col-md-6">
+                <label for="{{ form.period.id_for_label }}" class="form-label fw-semibold text-dark" style="font-size: 0.85rem;">Période</label>
+                {{ form.period }}
+                {% if form.period.errors %}<div class="text-danger small mt-1">{{ form.period.errors.0 }}</div>{% endif %}
+              </div>
+
+              <!-- Notes -->
+              <div class="col-12">
+                <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold text-dark" style="font-size: 0.85rem;">Notes / Motif</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
+              </div>
+
+              <!-- Payé -->
+              <div class="col-12">
+                <div class="card border-0 rounded-4 p-3" style="background-color: rgba(40, 167, 69, 0.05);">
+                  <div class="form-check form-switch d-flex align-items-center justify-content-between p-0 m-0">
+                    <div class="me-3">
+                      <label class="form-check-label fw-bold text-dark d-block" for="{{ form.is_paid.id_for_label }}" style="cursor: pointer;">
+                        Marquer comme payé
+                      </label>
+                      <span class="text-muted small">Cochez si le paiement a été effectué.</span>
+                    </div>
+                    <div>
+                      {{ form.is_paid }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex flex-column flex-sm-row justify-content-end gap-3 pt-4 mt-3 border-top">
+              <a href="{% url 'finance_list' %}" class="btn py-3 px-4 rounded-pill order-2 order-sm-1 fw-semibold" style="background-color: #f1f3f5; color: #495057;">
+                Annuler
+              </a>
+              <button type="submit" class="btn py-3 px-5 rounded-pill order-1 order-sm-2 d-inline-flex align-items-center justify-content-center gap-2 text-white fw-semibold" style="background: linear-gradient(135deg, #007bff, #0056b3); box-shadow: 0 6px 18px rgba(0, 123, 255, 0.35);">
+                <i class="bi bi-check2-circle fs-5"></i>
+                <span>Enregistrer</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control, .form-select {
+    border-radius: 12px !important;
+    border: 1.5px solid #dee2e6 !important;
+    padding: 12px 16px !important;
+    font-size: 0.95rem !important;
+    transition: all 0.25s ease !important;
+    background-color: #f8f9fa !important;
+  }
+  .form-control:focus, .form-select:focus {
+    background-color: #ffffff !important;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15) !important;
+    outline: none !important;
+  }
+  .form-switch .form-check-input {
+    width: 3.2em !important;
+    height: 1.7em !important;
+    cursor: pointer;
+    border-radius: 50px !important;
+    background-color: #ced4da;
+    border: none !important;
+  }
+  .form-switch .form-check-input:checked {
+    background-color: #28a745 !important;
+  }
+</style>
+{% endblock %}
