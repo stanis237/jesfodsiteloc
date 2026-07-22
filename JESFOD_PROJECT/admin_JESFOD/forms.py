@@ -89,3 +89,36 @@ class AdminMemberForm(forms.ModelForm):
             'activities': 'Activités et responsabilités',
             'is_certified': 'Membre certifié',
         }
+
+
+from menber_JESFOD.models import Seance, Absence
+
+class SeanceForm(forms.ModelForm):
+    class Meta:
+        model = Seance
+        fields = ['title', 'date']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Titre de la séance'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+        labels = {
+            'title': 'Titre',
+            'date': 'Date de la séance',
+        }
+
+class AbsenceForm(forms.ModelForm):
+    class Meta:
+        model = Absence
+        fields = ['member', 'seance', 'motif', 'justifiee']
+        widgets = {
+            'member': forms.Select(attrs={'class': 'form-select'}),
+            'seance': forms.Select(attrs={'class': 'form-select'}),
+            'motif': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Motif de l\'absence'}),
+            'justifiee': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'member': 'Membre absent',
+            'seance': 'Séance concernée',
+            'motif': 'Motif',
+            'justifiee': 'Absence justifiée ?',
+        }

@@ -52,6 +52,10 @@ def home(request):
     bureau_qs = list(Member.objects.filter(role='bureau'))
     bureau_members = sorted(bureau_qs, key=lambda m: POSITION_ORDER.get(m.position, 99))[:8]
 
+    from .models import Seance
+    reunion_members = Member.objects.all().order_by('-user__date_joined')
+    seances = Seance.objects.all().order_by('-date')[:5]
+
     news = News.objects.filter(is_published=True)[:5]
     galleries = Gallery.objects.filter(is_published=True)[:5]
     events = Event.objects.filter(is_published=True, event_date__gte=timezone.now()).order_by('event_date')[:6]
@@ -61,10 +65,13 @@ def home(request):
     return render(request, 'home.html', {
         'member': member,
         'bureau_members': bureau_members,
+        'reunion_members': reunion_members,
+        'seances': seances,
         'news': news,
         'galleries': galleries,
         'events': events,
         'total_members': total_members,
+        'total_members_count': total_members,
         'total_news': total_news,
     })
 

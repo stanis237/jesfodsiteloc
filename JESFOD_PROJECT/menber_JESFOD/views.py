@@ -39,12 +39,20 @@ def home(request):
     member = None
     if request.user.is_authenticated:
         member, _ = Member.objects.get_or_create(user=request.user)
+    from admin_JESFOD.models import Gallery
+    from .models import Seance
     bureau_members = Member.objects.filter(role='bureau')[:6]
+    reunion_members = Member.objects.all().order_by('-user__date_joined')
+    total_members_count = Member.objects.count()
+    seances = Seance.objects.all().order_by('-date')[:3]
     news = News.objects.filter(is_published=True)[:5]
     galleries = Gallery.objects.filter(is_published=True)[:5]
     return render(request, 'home.html', {
         'member': member,
         'bureau_members': bureau_members,
+        'reunion_members': reunion_members,
+        'total_members_count': total_members_count,
+        'seances': seances,
         'news': news,
         'galleries': galleries
     })

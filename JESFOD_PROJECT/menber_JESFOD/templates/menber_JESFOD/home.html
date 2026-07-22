@@ -1,197 +1,371 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard Accueil Membre - JESFOD{% endblock %}
-{% block meta_description %}Dashboard membre JESFOD - Accueil personnalisé, statistiques, actualités et activités pour les membres de l'association des jeunes de Fonakeukeur Douala.{% endblock %}
-{% block og_title %}Dashboard - JESFOD{% endblock %}
-{% block og_description %}Votre dashboard membre JESFOD avec stats, news et événements.{% endblock %}
+{% block title %}Accueil - JESFOD Douala{% endblock %}
+{% block meta_description %}Association des Jeunes solidaires de Fonakeukeu Douala - Éducation, culture, développement social, réunions et activités pour membres.{% endblock %}
+{% block og_title %}Accueil - JESFOD{% endblock %}
+{% block og_description %}Rejoignez la communauté JESFOD Douala.{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
-<section id="accueil" class="hero-section text-white position-relative overflow-hidden" style="background-image: url('JESFOD_PROJECT\JESFOD_PROJECT\static\images\cp4.jpg');">
-  <div class="container text-center position-relative z-index-2">
+<section id="accueil" class="hero-section text-white position-relative py-5 overflow-hidden" style="background: linear-gradient(135deg, rgba(0,86,179,0.9), rgba(25,135,84,0.85)), url('/static/images/cp4.jpg') center/cover no-repeat; min-height: 75vh; display: flex; align-items: center;">
+  <div class="container text-center py-4">
     <div class="row justify-content-center">
-      <div class="col-lg-8 animate__animated animate__fadeInUp">
-        <h1 class="display-3 fw-bold mb-4" style="color: black;">Bienvenue à <span class="text-warning">JESFOD</span></h1>
-        <p class="lead mb-5 fs-4" style="color: black;">Association des Jeunes solidaire  de Fonakeukeu de DOUALA pour l'éducation, la culture et le développement social</p>
-<div class="row justify-content-center">
-        <div class="col-lg-5">
-          <a href="#apropos" class="btn btn-outline-light btn-lg px-5 w-100 mb-3 d-block " style="color: black;">Découvrir</a>
-        </div>
-        <div class="col-lg-5">
+      <div class="col-lg-9 animate__animated animate__fadeInUp">
+        <h1 class="display-4 fw-black text-white mb-3">Bienvenue à <span class="text-warning">JESFOD</span></h1>
+        <p class="lead text-white-50 mb-4 fs-5 px-md-4">
+          Association des Jeunes Solidaires de Fonakeukeu de Douala — Éducation, Culture & Développement Social
+        </p>
+
+        <!-- Redirection Buttons / Touches de redirection -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+          <a href="#bureau" class="btn btn-outline-light btn-lg rounded-pill px-4 shadow-sm">
+            <i class="bi bi-shield-check me-2"></i>Bureau Exécutif
+          </a>
+          <a href="#membres-reunions" class="btn btn-warning btn-lg rounded-pill px-4 shadow-sm fw-bold">
+            <i class="bi bi-people-fill me-2"></i>Membres & Réunions
+          </a>
           {% if not user.is_authenticated %}
-            <a href="{% url 'login' %}" class="btn btn-outline-light w-100 mb-3">Se connecter</a>
+            <a href="{% url 'register' %}" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm fw-bold">
+              <i class="bi bi-person-plus-fill me-2"></i>S'inscrire
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-light btn-lg rounded-pill px-4 shadow-sm">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Se Connecter
+            </a>
           {% else %}
-            <a href="{% url 'member_dashboard' %}" class="btn btn-light btn-lg px-5 w-100">Dashboard</a>
+            <a href="{% url 'member_dashboard' %}" class="btn btn-light btn-lg rounded-pill px-4 shadow-sm fw-bold text-primary">
+              <i class="bi bi-speedometer2 me-2"></i>Mon Dashboard
+            </a>
           {% endif %}
         </div>
-      </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Stats Section -->
-<section class="stats py-5 bg-light-green">
+<!-- Stats Section (Responsive Cards) -->
+<section class="stats py-4 bg-light border-bottom">
   <div class="container">
-    <div class="row text-center g-4" style="gap:  1em;">
-      <div class="col-md-3"style="background-color: yellow; border-radius: 20px; padding: -5px">
-        <div class="stat-number" data-target="150">0</div>
-        <h5>Membres</h5>
+    <div class="row text-center g-3">
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-primary text-white h-100">
+          <i class="bi bi-people fs-1 mb-1"></i>
+          <div class="fs-2 fw-bold">{{ total_members_count|default:150 }}</div>
+          <div class="small text-white-50 text-uppercase fw-bold">Membres Inscrits</div>
+        </div>
       </div>
-      <div class="col-md-3"style="background-color: green; border-radius: 20px; padding: -5px">
-        <div class="stat-number" data-target="25">0</div>
-        <h5 >Événements</h5>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-success text-white h-100">
+          <i class="bi bi-calendar-event fs-1 mb-1"></i>
+          <div class="fs-2 fw-bold">{{ seances|length }}</div>
+          <div class="small text-white-50 text-uppercase fw-bold">Réunions / Séances</div>
+        </div>
       </div>
-      <div class="col-md-3" style="background-color:darkgoldenrod; border-radius: 20px; padding: -5px;">
-        <div class="stat-number" data-target="5">0</div>
-        <h5>Années</h5>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-warning text-dark h-100">
+          <i class="bi bi-newspaper fs-1 mb-1"></i>
+          <div class="fs-2 fw-bold">{{ news|length }}</div>
+          <div class="small text-dark-50 text-uppercase fw-bold">Actualités</div>
+        </div>
       </div>
-      <div class="col-md-3"  style="background-color: blue; border-radius: 20px; padding: -5px">
-        <div class="stat-number" data-target="100">0</div>
-        <h5>Projets</h5>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-info text-white h-100">
+          <i class="bi bi-award fs-1 mb-1"></i>
+          <div class="fs-2 fw-bold">5+</div>
+          <div class="small text-white-50 text-uppercase fw-bold">Années d'Impact</div>
+        </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- Section 1 : Bureau Exécutif -->
+<section id="bureau" class="py-5 bg-white border-bottom">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">Direction</span>
+      <h2 class="fw-bold">Bureau Exécutif JESFOD</h2>
+      <p class="text-muted col-lg-8 mx-auto">
+        Les membres dirigeants représentant et animant l'association des jeunes de Fonakeukeu Douala.
+      </p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      {% for bureau_member in bureau_members %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-3 hover-shadow transition border-top border-primary border-3">
+          <div class="position-relative d-inline-block mx-auto mb-3">
+            {% if bureau_member.profile_photo %}
+              <img src="{{ bureau_member.profile_photo.url }}" alt="{{ bureau_member.name }}"
+                   class="rounded-circle shadow-sm" style="width: 90px; height: 90px; object-fit: cover; border: 3px solid #0056b3;">
+            {% else %}
+              <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center fw-bold text-white mx-auto"
+                   style="width: 90px; height: 90px; background: linear-gradient(135deg, #0056b3, #198754); font-size: 2rem;">
+                {{ bureau_member.name.0|upper }}
+              </div>
+            {% endif %}
+            <span class="position-absolute bottom-0 end-0 badge bg-warning text-dark rounded-circle p-1" title="Membre du bureau">
+              <i class="bi bi-star-fill"></i>
+            </span>
+          </div>
+          <h5 class="fw-bold mb-1 text-dark text-truncate">{{ bureau_member.name }}</h5>
+          <span class="badge bg-primary text-white rounded-pill px-3 py-1 mb-2">
+            {{ bureau_member.get_position_display|default:bureau_member.get_role_display }}
+          </span>
+          {% if bureau_member.phone %}
+            <p class="small text-muted mb-0"><i class="bi bi-telephone me-1"></i>{{ bureau_member.phone }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-4 text-muted">
+        <i class="bi bi-shield-exclamation fs-1 d-block mb-2"></i>Aucun membre du bureau enregistré.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Section 2 : TOUT JUSTE EN BAS DU BUREAU EXÉCUTIF -> Réunions & Membres de la Réunion -->
+<section id="membres-reunions" class="py-5 bg-light border-bottom">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">Vie de l'Association</span>
+      <h2 class="fw-bold">Réunions & Membres de la Réunion</h2>
+      <p class="text-muted col-lg-8 mx-auto">
+        Consultez l'historique et le programme des réunions ordinaires ainsi que tous les membres de la réunion.
+        Toute personne inscrite s'affiche automatiquement ci-dessous !
+      </p>
+    </div>
+
+    <!-- Tableau des Réunions (Séances) -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="card border-0 shadow rounded-4 overflow-hidden">
+          <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-check text-warning me-2"></i>Programme des Réunions (Séances Ordinaires)</h5>
+            {% if user.is_authenticated %}
+              <a href="{% url 'member_dashboard' %}" class="btn btn-sm btn-outline-light rounded-pill px-3">Mon Dashboard</a>
+            {% endif %}
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-secondary">
+                  <tr>
+                    <th class="ps-4">Titre de la Réunion</th>
+                    <th>Date de tenue</th>
+                    <th class="text-center">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for seance in seances %}
+                  <tr>
+                    <td class="ps-4 fw-bold text-dark">
+                      <i class="bi bi-calendar3 me-2 text-primary"></i>{{ seance.title }}
+                    </td>
+                    <td><span class="badge bg-primary px-3 py-2 rounded-pill"><i class="bi bi-clock me-1"></i>{{ seance.date|date:"d/m/Y" }}</span></td>
+                    <td class="text-center">
+                      <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i>Session Enregistrée</span>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="3" class="text-center py-4 text-muted">
+                      <i class="bi bi-calendar-x fs-2 d-block mb-1"></i>Aucune réunion enregistrée pour le moment.
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cartes des Membres de la Réunion (Affichage Automatique après inscription) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h3 class="h4 fw-bold mb-0 text-dark">
+        <i class="bi bi-person-lines-fill me-2 text-success"></i>Membres de la Réunion ({{ total_members_count }})
+      </h3>
+      {% if not user.is_authenticated %}
+        <a href="{% url 'register' %}" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
+          <i class="bi bi-person-plus me-1"></i>S'inscrire à la réunion
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="row g-4">
+      {% for member_item in reunion_members %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-3 hover-shadow transition bg-white">
+          <div class="position-relative d-inline-block mx-auto mb-3">
+            {% if member_item.profile_photo %}
+              <img src="{{ member_item.profile_photo.url }}" alt="{{ member_item.name }}"
+                   class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #198754;">
+            {% else %}
+              <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center fw-bold text-white mx-auto"
+                   style="width: 80px; height: 80px; background: linear-gradient(135deg, #198754, #20c997); font-size: 1.8rem;">
+                {{ member_item.name.0|upper }}
+              </div>
+            {% endif %}
+            {% if member_item.is_certified %}
+              <span class="position-absolute bottom-0 end-0 badge bg-success rounded-circle p-1" title="Membre certifié">
+                <i class="bi bi-check-lg text-white"></i>
+              </span>
+            {% endif %}
+          </div>
+          <h6 class="fw-bold mb-1 text-dark text-truncate">{{ member_item.name }}</h6>
+          <p class="small text-muted mb-2">
+            <span class="badge bg-light text-dark border rounded-pill px-2 py-1">
+              {{ member_item.get_role_display }}
+            </span>
+          </p>
+          {% if member_item.school_level %}
+            <p class="small text-secondary mb-0"><i class="bi bi-mortarboard me-1"></i>{{ member_item.get_school_level_display }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-4 text-muted bg-white rounded-4 shadow-sm">
+        <i class="bi bi-people fs-1 d-block mb-2"></i>Aucun membre inscrit.
+      </div>
+      {% endfor %}
+    </div>
+
   </div>
 </section>
 
 <!-- About Section -->
-<section id="apropos" class="py-5 bg-white">
+<section id="apropos" class="py-5 bg-white border-bottom">
   <div class="container">
-    <h2 class="text-center mb-5">À Propos de JESFOD</h2>
-    <div class="row align-items-center">
+    <div class="row align-items-center g-4">
       <div class="col-lg-6">
-        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="img-fluid rounded shadow" alt="Jeunes">
+        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="img-fluid rounded-4 shadow" alt="Jeunes JESFOD">
       </div>
       <div class="col-lg-6">
-        <h3 class="mb-4 text-primary-green fw-bold">Notre Mission</h3>
-        <p class="lead mb-4">Rassembler les jeunes de Fonakeukeur autour d'activités éducatives, culturelles et sociales pour favoriser leur développement personnel et communautaire.</p>
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="d-flex">
-              <i class="bi bi-check-circle-fill text-primary-green fs-3 me-3"></i>
+        <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">À Propos</span>
+        <h2 class="mb-3 fw-bold">Notre Mission & Vision</h2>
+        <p class="lead mb-4 text-muted">Rassembler la jeunesse de Fonakeukeu à Douala autour de valeurs de solidarité, d'entraide, d'éducation et de promotion culturelle.</p>
+        
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center p-3 bg-light rounded-3 border">
+              <i class="bi bi-journal-bookmark-fill text-primary fs-2 me-3"></i>
               <div>
-                <h6>Éducation</h6>
-                <p>Formations et ateliers</p>
+                <h6 class="mb-0 fw-bold">Éducation</h6>
+                <small class="text-muted">Accompagnement & Ateliers</small>
               </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="d-flex">
-              <i class="bi bi-heart-fill text-primary-green fs-3 me-3"></i>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center p-3 bg-light rounded-3 border">
+              <i class="bi bi-heart-fill text-danger fs-2 me-3"></i>
               <div>
-                <h6>Communauté</h6>
-                <p>Solidarité et entraide</p>
+                <h6 class="mb-0 fw-bold">Entraide</h6>
+                <small class="text-muted">Fonds & Tontine solidaire</small>
               </div>
             </div>
           </div>
         </div>
-        <a href="#contact" class="btn btn-primary mt-4">Nous Contacter</a>
+
+        <div class="d-flex gap-2">
+          <a href="#contact" class="btn btn-primary rounded-pill px-4">Nous Contacter</a>
+          {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-outline-secondary rounded-pill px-4">S'inscrire</a>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- News Section -->
-<section id="news" class="py-5 bg-light">
+<section id="news" class="py-5 bg-light border-bottom">
   <div class="container">
-    <h2 class="text-center mb-5">Actualités</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h2 class="fw-bold mb-0">Dernières Actualités</h2>
+        <p class="text-muted mb-0 small">Découvrez les nouvelles et annonces de l'association</p>
+      </div>
+      <a href="{% url 'news_list' %}" class="btn btn-outline-primary rounded-pill px-3">
+        Toutes les actualités <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
     <div class="row g-4">
       {% for item in news %}
       <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
           {% if item.image %}
-          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
           {% endif %}
-          <div class="card-body">
-            <h5 class="card-title">{{ item.title }}</h5>
-            <p class="card-text">{{ item.content|truncatechars:100 }}</p>
-            <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
+          <div class="card-body p-4">
+            <h5 class="card-title fw-bold text-dark">{{ item.title }}</h5>
+            <p class="card-text text-muted small">{{ item.content|truncatechars:100 }}</p>
+          </div>
+          <div class="card-footer bg-transparent border-0 px-4 pb-3">
+            <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}</small>
           </div>
         </div>
       </div>
       {% empty %}
-      <p class="text-center">Aucune actualité pour le moment.</p>
+      <div class="col-12 text-center text-muted py-4">Aucune actualité disponible pour le moment.</div>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<!-- Gallery Section -->
-<section id="galerie" class="py-5 bg-white">
+<!-- Galerie Section -->
+<section id="galerie" class="py-5 bg-white border-bottom">
   <div class="container">
-    <h2 class="text-center mb-5">Galerie</h2>
+    <h2 class="text-center fw-bold mb-4">Galerie Photos</h2>
     <div class="row g-4">
       {% for item in galleries %}
       <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
           {% if item.image %}
-          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
           {% endif %}
           <div class="card-body">
-            <h5 class="card-title">{{ item.title }}</h5>
-            <p class="card-text">{{ item.description|truncatechars:100 }}</p>
-            <small class="text-muted">{{ item.created_date|date:"d M Y" }}</small>
+            <h6 class="fw-bold mb-1">{{ item.title }}</h6>
+            <p class="small text-muted mb-0">{{ item.description|truncatechars:80 }}</p>
           </div>
         </div>
       </div>
       {% empty %}
-      <p class="text-center">Aucune galerie pour le moment.</p>
+      <div class="col-12 text-center text-muted py-3">Aucune photo dans la galerie.</div>
       {% endfor %}
-    </div>
-  </div>
-</section>
-
-<!-- Testimonials -->
-<section class="py-5 bg-white">
-  <div class="container">
-    <h2 class="text-center mb-5">Ce Que Disent Nos Membres</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card testimonial-card p-4">
-          <p class="mb-3">"JESFOD a transformé ma vie grâce à ses formations et son esprit communautaire."</p>
-          <h6>- Malimeta katty., Membre active</h6>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card testimonial-card p-4">
-          <p class="mb-3">"Une association dynamique qui fait la différence à Fonakeukeur."</p>
-          <h6>- alain evrad., Bénévolaire</h6>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card testimonial-card p-4">
-          <p class="mb-3">"Les événements sont toujours enrichissants et joyeux."</p>
-          <h6>- raissa dollars., Jeune membre</h6>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
 <!-- Contact Section -->
-<section id="contact" class="py-5 bg-primary-green text-white">
+<section id="contact" class="py-5 bg-dark text-white">
   <div class="container">
-    <div class="row align-items-center">
+    <div class="row align-items-center g-4">
       <div class="col-lg-6">
-        <h2 class="mb-4">Contactez-Nous</h2>
-        <p class="lead mb-4">Rejoignez-nous ou posez vos questions.</p>
+        <h2 class="fw-bold mb-3">Contactez JESFOD Douala</h2>
+        <p class="text-white-50 mb-4">Besoin d'informations sur l'adhésion, les cotisations ou nos réunions ? Envoyez-nous un message.</p>
         <ul class="list-unstyled">
-          <li class="mb-3"><i class="bi bi-telephone me-3"></i>+237 674867509</li>
-          <li class="mb-3"><i class="bi bi-envelope me-3"></i>jesfod.org</li>
-          <li><i class="bi bi-geo-alt me-3"></i>Fonakeukeur, Cameroun</li>
+          <li class="mb-3 d-flex align-items-center"><i class="bi bi-telephone-fill text-warning fs-5 me-3"></i>+237 674 867 509</li>
+          <li class="mb-3 d-flex align-items-center"><i class="bi bi-envelope-fill text-warning fs-5 me-3"></i>contact@jesfod.org</li>
+          <li class="d-flex align-items-center"><i class="bi bi-geo-alt-fill text-warning fs-5 me-3"></i>Fonakeukeu, Douala, Cameroun</li>
         </ul>
       </div>
       <div class="col-lg-6">
-        <form action="#" method="post" class="row g-3">
+        <form action="#" method="post" class="row g-3 bg-secondary bg-opacity-25 p-4 rounded-4 shadow">
           <div class="col-md-6">
-            <input type="text" class="form-control" placeholder="Nom" required>
+            <input type="text" class="form-control rounded-3" placeholder="Votre nom" required>
           </div>
           <div class="col-md-6">
-            <input type="email" class="form-control" placeholder="Email" required>
+            <input type="email" class="form-control rounded-3" placeholder="Votre email" required>
           </div>
           <div class="col-12">
-            <textarea class="form-control" rows="5" placeholder="Votre message" required></textarea>
+            <textarea class="form-control rounded-3" rows="4" placeholder="Votre message" required></textarea>
           </div>
           <div class="col-12">
-            <button type="submit" class="btn btn-light btn-lg w-100">Envoyer le Message</button>
+            <button type="submit" class="btn btn-warning btn-lg w-100 rounded-pill fw-bold text-dark">
+              <i class="bi bi-send me-2"></i>Envoyer le Message
+            </button>
           </div>
         </form>
       </div>

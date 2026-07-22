@@ -1,136 +1,212 @@
 {% extends 'base.html' %}
+{% block title %}Dashboard Membre - JESFOD{% endblock %}
 {% block content %}
-<div class="container mt-5">
-  <h2>Tableau de bord Membre</h2>
-  <div class="row mb-4">
-    <div class="col-md-6">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h5>Votre Profil</h5>
+<div class="container mt-4 py-4">
+  <!-- Header & Navigation Touches -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold mb-1"><i class="bi bi-speedometer2 text-primary me-2"></i>Espace Membre</h2>
+      <p class="text-muted mb-0">Bienvenue, {{ member.name }}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-pill px-3 fw-semibold">
+        <i class="bi bi-house-door me-1"></i>Accueil
+      </a>
+      <a href="{% url 'news_list' %}" class="btn btn-outline-info rounded-pill px-3 fw-semibold">
+        <i class="bi bi-newspaper me-1"></i>Actualités
+      </a>
+      {% if member.is_bureau %}
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-warning rounded-pill px-3 fw-semibold">
+          <i class="bi bi-shield-lock me-1"></i>Espace Bureau
+        </a>
+      {% endif %}
+      <a href="{% url 'logout' %}" class="btn btn-outline-danger rounded-pill px-3 fw-semibold" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- Carte Profil -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow rounded-4 overflow-hidden h-100">
+        <div class="card-header bg-primary text-white py-3 px-4 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="bi bi-person-circle me-2"></i>Votre Profil Membre</h5>
+          <span class="badge bg-light text-primary rounded-pill px-3">{{ member.get_role_display }}</span>
         </div>
-        <div class="card-body">
-          <h6>Stats Globales</h6>
-          <p>Membres: <strong>{{ total_members }}</strong> | Actualités: <strong>{{ total_news }}</strong></p>
-          <hr>
-          <p><strong>Nom:</strong> {{ member.name }}</p>
-          <p><strong>Email:</strong> {{ member.email }}</p>
-          <p><strong>Téléphone:</strong> {{ member.phone|default:"Non renseigné" }}</p>
-          {% if member.profile_photo %}
-          <div class="text-center mb-3">
-            <img src="{{ member.profile_photo.url }}" alt="Photo de profil" class="profile-photo">
+        <div class="card-body p-4">
+          <div class="row align-items-center mb-4">
+            <div class="col-sm-4 text-center mb-3 mb-sm-0">
+              {% if member.profile_photo %}
+                <img src="{{ member.profile_photo.url }}" alt="Photo de {{ member.name }}"
+                     class="rounded-circle shadow-sm img-fluid" style="width: 110px; height: 110px; object-fit: cover; border: 3px solid #0056b3;">
+              {% else %}
+                <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center fw-bold text-white mx-auto"
+                     style="width: 110px; height: 110px; background: linear-gradient(135deg, #0056b3, #198754); font-size: 2.2rem;">
+                  {{ member.name.0|upper }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-sm-8">
+              <h4 class="fw-bold mb-1">{{ member.name }}</h4>
+              <p class="text-muted mb-2"><i class="bi bi-envelope me-2"></i>{{ member.email }}</p>
+              <p class="text-muted mb-2"><i class="bi bi-telephone me-2"></i>{{ member.phone|default:"Non renseigné" }}</p>
+              <p class="mb-0">
+                <strong>Certifié:</strong>
+                {% if member.is_certified %}
+                  <span class="badge bg-success px-3 py-1 rounded-pill"><i class="bi bi-check-circle me-1"></i>Oui</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark px-3 py-1 rounded-pill"><i class="bi bi-clock me-1"></i>En attente</span>
+                {% endif %}
+              </p>
+            </div>
           </div>
-          {% else %}
-          <div class="text-center mb-3">
-            <div class="profile-avatar-fallback"><span>👤</span></div>
+
+          <div class="row g-3 text-center mb-4">
+            <div class="col-6">
+              <div class="p-3 bg-light rounded-3 border">
+                <div class="text-muted small fw-bold mb-1">Présence aux Séances</div>
+                <div class="fs-4 fw-bold text-info">{{ member.seances_present }} / {{ member.total_seances }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-light rounded-3 border">
+                <div class="text-muted small fw-bold mb-1">Dettes & Impayés</div>
+                <div class="fs-4 fw-bold {% if member.total_dettes > 0 %}text-danger{% else %}text-success{% endif %}">
+                  {{ member.total_dettes }} FCFA
+                </div>
+              </div>
+            </div>
           </div>
-          {% endif %}
-          <p><strong>Niveau scolaire:</strong> {{ member.get_school_level_display|default:"Non renseigné" }}</p>
-          <p><strong>Rôle:</strong> {{ member.get_role_display }}</p>
-          <p><strong>Certifié:</strong> {% if member.is_certified %}<span class="badge bg-success">Oui</span>{% else %}<span class="badge bg-warning">En attente</span>{% endif %}</p>
+
           {% if not member.is_certified %}
-          <div class="alert alert-info mt-3">
-            <strong>Statut de conformité:</strong> Votre profil n'est pas encore certifié.
-            <a href="{% url 'certification' %}" class="alert-link">Cliquez ici pour vous certifier</a>.
+          <div class="alert alert-warning border-0 shadow-sm rounded-3 mb-4">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+              <div>
+                <strong>Profil non certifié :</strong> Soumettez votre demande pour être certifié par le bureau.
+              </div>
+            </div>
+            <a href="{% url 'certification' %}" class="btn btn-warning btn-sm rounded-pill mt-2 px-3 fw-bold">
+              Demander la certification <i class="bi bi-arrow-right ms-1"></i>
+            </a>
           </div>
           {% endif %}
-          <hr>
-          <h6>Éditer Profil</h6>
-          <form method="post" enctype="multipart/form-data" class="mt-3">
+
+          <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square me-2"></i>Mettre à jour vos informations</h6>
+          <form method="post" enctype="multipart/form-data" class="bg-light p-3 rounded-3 border">
             {% csrf_token %}
             <input type="hidden" name="edit_profile" value="1">
             {{ edit_form.as_p }}
-            <button type="submit" class="btn btn-primary btn-sm">Sauvegarder</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+              <i class="bi bi-save me-2"></i>Sauvegarder
+            </button>
           </form>
-          <div class="mt-3">
-            <a href="{% url 'certification' %}" class="btn btn-warning btn-sm">Certification</a>
-            <a href="{% url 'news_list' %}" class="btn btn-info btn-sm">Actualités</a>
-            <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">Déconnexion</a>
-          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-6">
-      <div class="card shadow">
-        <div class="card-header bg-success text-white">
-          <h5>Finances</h5>
+
+    <!-- Carte Finances -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow rounded-4 overflow-hidden h-100">
+        <div class="card-header bg-success text-white py-3 px-4">
+          <h5 class="mb-0 fw-bold"><i class="bi bi-wallet2 me-2"></i>Votre Récapitulatif Financier</h5>
         </div>
-        <div class="card-body">
-          <h6>Totaux</h6>
-          <ul class="list-group mb-3">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              Fonds de Roulement
-              <span class="badge bg-primary rounded-pill">{{ total_fdr }} FCFA</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              Amendes
-              <span class="badge bg-danger rounded-pill">{{ total_amendes }} FCFA</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              Tontine
-              <span class="badge bg-info rounded-pill">{{ total_tontine }} FCFA</span>
-            </li>
-          </ul>
-          <h6>Entrées Récentes</h6>
-          {% if fdr_entries %}
-          <h7 class="text-muted">FDR</h7>
-          <ul class="list-group mb-2">
-            {% for entry in fdr_entries|slice:":5" %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              {{ entry.amount }} FCFA - {{ entry.created_date|date:"d/m/Y" }}
-              {% if not entry.is_paid %}<span class="badge bg-warning">Impaye</span>{% endif %}
-            </li>
-            {% endfor %}
-          </ul>
-          {% endif %}
-          {% if amande_entries %}
-          <h7 class="text-muted">Amendes</h7>
-          <ul class="list-group mb-2">
-            {% for entry in amande_entries|slice:":5" %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              {{ entry.amount }} FCFA - {{ entry.created_date|date:"d/m/Y" }}
-              {% if not entry.is_paid %}<span class="badge bg-warning">Impaye</span>{% endif %}
-            </li>
-            {% endfor %}
-          </ul>
-          {% endif %}
-          {% if tontine_entries %}
-          <h7 class="text-muted">Tontine</h7>
-          <ul class="list-group mb-2">
-            {% for entry in tontine_entries|slice:":5" %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              {{ entry.amount }} FCFA - {{ entry.created_date|date:"d/m/Y" }}
-              {% if not entry.is_paid %}<span class="badge bg-warning">Impaye</span>{% endif %}
-            </li>
-            {% endfor %}
-          </ul>
-          {% endif %}
-          {% if not fdr_entries and not amande_entries and not tontine_entries %}
-          <p class="text-muted">Aucune entrée financière disponible.</p>
+        <div class="card-body p-4">
+          <h6 class="fw-bold text-muted mb-3">Totaux Personnels</h6>
+          <div class="row g-3 mb-4 text-center">
+            <div class="col-4">
+              <div class="p-3 bg-light rounded-3 border border-primary border-2">
+                <div class="small text-muted fw-bold">FDR</div>
+                <div class="fw-bold text-primary fs-5">{{ total_fdr }} <small>FCFA</small></div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-3 bg-light rounded-3 border border-danger border-2">
+                <div class="small text-muted fw-bold">Amendes</div>
+                <div class="fw-bold text-danger fs-5">{{ total_amendes }} <small>FCFA</small></div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-3 bg-light rounded-3 border border-info border-2">
+                <div class="small text-muted fw-bold">Tontine</div>
+                <div class="fw-bold text-info fs-5">{{ total_tontine }} <small>FCFA</small></div>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-muted mb-3">Dernières Opérations</h6>
+          {% if fdr_entries or amande_entries or tontine_entries %}
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Type</th>
+                    <th>Montant</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for entry in fdr_entries|slice:":3" %}
+                  <tr>
+                    <td><span class="badge bg-primary">FDR</span></td>
+                    <td>{{ entry.amount }} FCFA</td>
+                    <td>{{ entry.created_date|date:"d/m/Y" }}</td>
+                    <td>{% if entry.is_paid %}<span class="badge bg-success">Payé</span>{% else %}<span class="badge bg-warning text-dark">Impayé</span>{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                  {% for entry in amande_entries|slice:":3" %}
+                  <tr>
+                    <td><span class="badge bg-danger">Amende</span></td>
+                    <td>{{ entry.amount }} FCFA</td>
+                    <td>{{ entry.created_date|date:"d/m/Y" }}</td>
+                    <td>{% if entry.is_paid %}<span class="badge bg-success">Payé</span>{% else %}<span class="badge bg-warning text-dark">Impayé</span>{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                  {% for entry in tontine_entries|slice:":3" %}
+                  <tr>
+                    <td><span class="badge bg-info">Tontine</span></td>
+                    <td>{{ entry.amount }} FCFA</td>
+                    <td>{{ entry.created_date|date:"d/m/Y" }}</td>
+                    <td>{% if entry.is_paid %}<span class="badge bg-success">Payé</span>{% else %}<span class="badge bg-warning text-dark">Impayé</span>{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted bg-light rounded-3">
+              <i class="bi bi-journal-x fs-2 d-block mb-1"></i>Aucune opération financière enregistrée pour le moment.
+            </div>
           {% endif %}
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Actualités -->
   <div class="row">
-    <div class="col-md-12">
-      <div class="card shadow">
-        <div class="card-header bg-info text-white">
-          <h5>Dernières Actualités</h5>
+    <div class="col-12">
+      <div class="card border-0 shadow rounded-4 overflow-hidden">
+        <div class="card-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="bi bi-newspaper me-2"></i>Actualités Récentes de JESFOD</h5>
+          <a href="{% url 'news_list' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">Toutes les actualités</a>
         </div>
-        <div class="card-body">
-          {% for news in news_list %}
-          <div class="mb-2 p-2 border-bottom">
-            <h6>{{ news.title }}</h6>
-            <p class="small mb-0">{{ news.content|truncatewords:15 }}</p>
-            <small class="text-muted">{{ news.created_date|date:"d/m/Y" }}</small>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            {% for news in news_list %}
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border h-100">
+                <h6 class="fw-bold text-primary mb-1">{{ news.title }}</h6>
+                <p class="small text-muted mb-2">{{ news.content|truncatewords:20 }}</p>
+                <small class="text-secondary"><i class="bi bi-calendar me-1"></i>{{ news.created_date|date:"d/m/Y" }}</small>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center text-muted py-3">Aucune actualité récente.</div>
+            {% endfor %}
           </div>
-          {% empty %}
-          <p class="text-muted">Aucune actualité récente.</p>
-          {% endfor %}
-          <a href="{% url 'news_list' %}" class="btn btn-sm btn-outline-primary mt-2">Voir toutes les actualités</a>
-          {% if member.is_bureau %}
-          <a href="{% url 'news_create' %}" class="btn btn-sm btn-success mt-2">Publier</a>
-          {% endif %}
         </div>
       </div>
     </div>

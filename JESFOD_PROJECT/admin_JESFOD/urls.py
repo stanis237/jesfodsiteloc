@@ -26,4 +26,15 @@ urlpatterns = [
     path('finance/<int:pk>/update/', views.finance_update, name='finance_update'),
     path('finance/<int:pk>/delete/', views.finance_delete, name='finance_delete'),
     path('finance/<int:pk>/paid/', views.finance_mark_paid, name='finance_mark_paid'),
+
+    # Absences & Seances
+    path('seances/', views.seance_list, name='seance_list'),
+    path('seances/create/', views.seance_create, name='seance_create'),
+    path('absences/', views.absence_list, name='absence_list'),
+    path('absences/create/', views.absence_create, name='absence_create'),
+
+    # Exports PDF
+    path('finance/export/pdf/', views.export_finance_pdf, name='export_finance_pdf'),
+    path('members/export/pdf/', views.export_members_pdf, name='export_members_pdf'),
+    path('absences/export/pdf/', views.export_absences_pdf, name='export_absences_pdf'),
 ]

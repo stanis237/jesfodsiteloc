@@ -1,18 +1,19 @@
-<!DOCTYPE html>
 {% extends 'base.html' %}
-{% block title %}Inscription - JESFOD{% endblock %}
+{% block title %}Inscription - JESFOD Douala{% endblock %}
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-4 py-4">
   <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-      <div class="card shadow-lg border-0">
-        <div class="card-body p-5">
-          <h2 class="text-center mb-4 text-primary">Inscription JESFOD</h2>
-          <p class="text-center text-muted mb-4">Rejoignez notre communauté dès maintenant !</p>
-          
+    <div class="col-md-9 col-lg-7">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-header bg-success text-white text-center py-4">
+          <h3 class="fw-bold mb-1"><i class="bi bi-person-plus-fill me-2"></i>Inscription JESFOD</h3>
+          <p class="small text-white-50 mb-0">Rejoignez l'association des jeunes de Fonakeukeu Douala</p>
+        </div>
+        <div class="card-body p-4 p-md-5">
+
           {% if form.errors %}
-            <div class="alert alert-danger">
-              <ul class="mb-0">
+            <div class="alert alert-danger rounded-3 mb-4">
+              <ul class="mb-0 ps-3">
                 {% for field, errors in form.errors.items %}
                   {% for error in errors %}
                     <li>{{ error }}</li>
@@ -21,49 +22,60 @@
               </ul>
             </div>
           {% endif %}
-          
+
           <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="row g-3">
               <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">Nom d'utilisateur</label>
                 {{ form.username }}
               </div>
               <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">Nom Complet</label>
                 {{ form.name }}
               </div>
               <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">Adresse Email</label>
                 {{ form.email }}
               </div>
               <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">Numéro de Téléphone</label>
                 {{ form.phone }}
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold">Photo de profil</label>
+                <label class="form-label fw-bold small text-muted">Photo de profil</label>
                 {{ form.profile_photo }}
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold">Niveau scolaire</label>
+                <label class="form-label fw-bold small text-muted">Niveau d'études</label>
                 {{ form.school_level }}
               </div>
-              <div class="col-md-6">
-                <label class="form-label fw-bold">Votre rôle / Poste</label>
+              <div class="col-12">
+                <label class="form-label fw-bold small text-muted">Rôle / Statut</label>
                 {{ form.role }}
               </div>
-              <div class="col-12">
+              <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">Mot de passe</label>
                 {{ form.password1 }}
               </div>
-              <div class="col-12">
+              <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">Confirmer le mot de passe</label>
                 {{ form.password2 }}
               </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-lg w-100 mt-4 shadow-sm">S'inscrire</button>
+            <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-bold shadow-sm mt-4">
+              <i class="bi bi-check-circle-fill me-2"></i>Valider mon inscription
+            </button>
           </form>
-          
-          <div class="text-center mt-4">
-            <a href="{% url 'login' %}" class="btn btn-outline-primary w-100 mb-3 d-block">
-              <i class="bi bi-box-arrow-in-right me-2"></i>Déjà membre ? Se connecter
+
+          <div class="text-center mt-4 pt-3 border-top">
+            <p class="mb-2 text-muted">Déjà inscrit ?</p>
+            <a href="{% url 'login' %}" class="btn btn-outline-primary rounded-pill w-100 mb-3 fw-bold">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Se Connecter
             </a>
-            <a href="{% url 'home' %}" class="btn btn-outline-secondary">← Retour à l'accueil</a>
+            <a href="{% url 'home' %}" class="btn btn-link text-secondary text-decoration-none">
+              <i class="bi bi-arrow-left me-1"></i>Retour à l'accueil
+            </a>
           </div>
         </div>
       </div>

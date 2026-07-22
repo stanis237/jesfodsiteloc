@@ -103,6 +103,20 @@ class Member(models.Model):
         return total or 0
 
     @property
+    def total_dettes(self):
+        from django.db.models import Sum
+        total = self.finances.filter(is_paid=False).aggregate(Sum('amount'))['amount__sum']
+        return total or 0
+
+    @property
+    def total_seances(self):
+        return Seance.objects.count()
+
+    @property
+    def seances_present(self):
+        return max(0, self.total_seances - self.absences.count())
+
+    @property
     def situation(self):
         """Returns 'a_jour' if inscription is paid and no unpaid amendes, else 'pas_a_jour'."""
         if self.inscription_paid and self.total_amendes == 0:
@@ -146,3 +160,30 @@ class FinanceEntry(models.Model):
         if self.is_paid and not self.date_paid:
             self.date_paid = timezone.now()
         super().save(*args, **kwargs)
+
+
+class Seance(models.Model):
+    title = models.CharField(max_length=200, default="Séance ordinaire")
+    date = models.DateField()
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.title} du {self.date.strftime('%d/%m/%Y')}"
+
+class Absence(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='absences')
+    seance = models.ForeignKey(Seance, on_delete=models.CASCADE, related_name='absences')
+    motif = models.CharField(max_length=200, blank=True, null=True, help_text="Motif de l'absence")
+    justifiee = models.BooleanField(default=False)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-seance__date']
+        unique_together = ('member', 'seance')
+
+    def __str__(self):
+        return f"Absence de {self.member.name} - {self.seance}"
+

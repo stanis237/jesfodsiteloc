@@ -376,3 +376,132 @@ def finance_mark_paid(request, pk):
         entry.save()
         messages.success(request, f'✓ {entry.member.name} — {entry.get_type_display()} marqué payé.')
     return redirect('finance_list')
+
+# ------------------------------------------------------------------ #
+#  ABSENCES & SEANCES                                                 #
+# ------------------------------------------------------------------ #
+from menber_JESFOD.models import Seance, Absence
+from .forms import SeanceForm, AbsenceForm
+
+@login_required
+@bureau_required
+def seance_list(request):
+    seances = Seance.objects.all().order_by('-date')
+    return render(request, 'admin_JESFOD/seance_list.html', {
+        'seances': seances,
+        'is_admin_page': True,
+    })
+
+@login_required
+@bureau_required
+def seance_create(request):
+    if request.method == 'POST':
+        form = SeanceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Séance ajoutée avec succès.')
+            return redirect('seance_list')
+    else:
+        form = SeanceForm()
+    return render(request, 'admin_JESFOD/seance_form.html', {
+        'form': form,
+        'is_admin_page': True,
+    })
+
+@login_required
+@bureau_required
+def absence_list(request):
+    absences = Absence.objects.select_related('member', 'seance').all().order_by('-seance__date')
+    return render(request, 'admin_JESFOD/absence_list.html', {
+        'absences': absences,
+        'is_admin_page': True,
+    })
+
+@login_required
+@bureau_required
+def absence_create(request):
+    if request.method == 'POST':
+        form = AbsenceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Absence enregistrée avec succès.')
+            return redirect('absence_list')
+    else:
+        form = AbsenceForm()
+    return render(request, 'admin_JESFOD/absence_form.html', {
+        'form': form,
+        'is_admin_page': True,
+    })
+
+# ------------------------------------------------------------------ #
+#  EXPORTS PDF                                                        #
+# ------------------------------------------------------------------ #
+from django.template.loader import get_template
+from django.http import HttpResponse
+
+def render_to_pdf(template_src, context_dict={}):
+    try:
+        from xhtml2pdf import pisa
+        template = get_template(template_src)
+        html = template.render(context_dict)
+        response = HttpResponse(content_type='application/pdf')
+        pisa_status = pisa.CreatePDF(html, dest=response)
+        if pisa_status.err:
+            return HttpResponse('Erreur lors de la génération du PDF <pre>' + html + '</pre>')
+        return response
+    except ImportError:
+        return HttpResponse("xhtml2pdf n'est pas installé.")
+
+@login_required
+@bureau_required
+def export_finance_pdf(request):
+    members = Member.objects.prefetch_related('finances').all().order_by('name')
+    total_inscriptions = FinanceEntry.objects.filter(type='inscription', is_paid=True).aggregate(s=Sum('amount'))['s'] or 0
+    total_fdr = FinanceEntry.objects.filter(type='fdr', is_paid=True).aggregate(s=Sum('amount'))['s'] or 0
+    total_amendes = FinanceEntry.objects.filter(type='amande', is_paid=True).aggregate(s=Sum('amount'))['s'] or 0
+    total_tontine = FinanceEntry.objects.filter(type='tontine', is_paid=True).aggregate(s=Sum('amount'))['s'] or 0
+    
+    context = {
+        'members': members,
+        'total_inscriptions': total_inscriptions,
+        'total_fdr': total_fdr,
+        'total_amendes': total_amendes,
+        'total_tontine': total_tontine,
+        'date': timezone.now(),
+        'request': request,
+        'logo_url': request.build_absolute_uri('/static/images/logo.jpeg'),
+    }
+    response = render_to_pdf('admin_JESFOD/pdf_finance.html', context)
+    if isinstance(response, HttpResponse) and response.get('Content-Type') == 'application/pdf':
+        response['Content-Disposition'] = 'attachment; filename="bilan_financier_jesfod.pdf"'
+    return response
+
+@login_required
+@bureau_required
+def export_members_pdf(request):
+    members = Member.objects.all().order_by('name')
+    context = {
+        'members': members,
+        'date': timezone.now(),
+        'request': request,
+        'logo_url': request.build_absolute_uri('/static/images/logo.jpeg'),
+    }
+    response = render_to_pdf('admin_JESFOD/pdf_members.html', context)
+    if isinstance(response, HttpResponse) and response.get('Content-Type') == 'application/pdf':
+        response['Content-Disposition'] = 'attachment; filename="liste_membres_jesfod.pdf"'
+    return response
+
+@login_required
+@bureau_required
+def export_absences_pdf(request):
+    absences = Absence.objects.select_related('member', 'seance').all().order_by('-seance__date')
+    context = {
+        'absences': absences,
+        'date': timezone.now(),
+        'request': request,
+        'logo_url': request.build_absolute_uri('/static/images/logo.jpeg'),
+    }
+    response = render_to_pdf('admin_JESFOD/pdf_absences.html', context)
+    if isinstance(response, HttpResponse) and response.get('Content-Type') == 'application/pdf':
+        response['Content-Disposition'] = 'attachment; filename="liste_absences_jesfod.pdf"'
+    return response
