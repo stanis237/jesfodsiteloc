@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Sum
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from menber_JESFOD.models import Member, News, Event, FinanceEntry
 from .models import Gallery
@@ -21,8 +21,25 @@ def is_bureau(user):
     except Member.DoesNotExist:
         return False
 
+def is_tresorier(user):
+    try:
+        member = Member.objects.get(user=user)
+        return member.is_bureau
+    except Member.DoesNotExist:
+        return False
+
+def is_secretaire(user):
+    try:
+        member = Member.objects.get(user=user)
+        return member.is_bureau
+    except Member.DoesNotExist:
+        return False
+
 
 bureau_required = user_passes_test(is_bureau)
+tresorier_required = user_passes_test(is_tresorier)
+secretaire_required = user_passes_test(is_secretaire)
+
 
 
 # ------------------------------------------------------------------ #
@@ -65,8 +82,11 @@ def admin_dashboard(request):
         'total_tontine': total_tontine,
         'members_pas_a_jour': members_pas_a_jour,
         'is_admin_page': True,
+        'is_tresorier_role': is_tresorier(request.user),
+        'is_secretaire_role': is_secretaire(request.user),
     }
     return render(request, 'admin_JESFOD/dashboard.html', context)
+
 
 
 # ------------------------------------------------------------------ #
@@ -203,7 +223,7 @@ class MemberDeleteView(DeleteView):
 #  NEWS CREATE                                                        #
 # ------------------------------------------------------------------ #
 @login_required
-@bureau_required
+@secretaire_required
 def news_create(request):
     if request.method == 'POST':
         form = NewsForm(request.POST, request.FILES)
@@ -239,10 +259,20 @@ def _send_news_notification(news):
 
 
 # ------------------------------------------------------------------ #
-#  GALLERY CREATE                                                     #
+#  GALLERY CRUD                                                       #
 # ------------------------------------------------------------------ #
 @login_required
-@bureau_required
+@secretaire_required
+def gallery_list(request):
+    galleries = Gallery.objects.all().order_by('-created_date')
+    return render(request, 'admin_JESFOD/gallery_list.html', {
+        'galleries': galleries,
+        'is_admin_page': True,
+    })
+
+
+@login_required
+@secretaire_required
 def gallery_create(request):
     if request.method == 'POST':
         form = GalleryForm(request.POST, request.FILES)
@@ -251,17 +281,60 @@ def gallery_create(request):
             gallery.created_by = request.user
             gallery.save()
             messages.success(request, 'Galerie ajoutée avec succès !')
-            return redirect('admin_dashboard')
+            return redirect('gallery_list')
     else:
         form = GalleryForm()
-    return render(request, 'admin_JESFOD/gallery_form.html', {'form': form, 'is_admin_page': True})
+    return render(request, 'admin_JESFOD/gallery_form.html', {
+        'form': form, 'is_admin_page': True, 'title': 'Ajouter une Photo à la Galerie'
+    })
+
+
+@login_required
+@secretaire_required
+def gallery_update(request, pk):
+    gallery = get_object_or_404(Gallery, pk=pk)
+    if request.method == 'POST':
+        form = GalleryForm(request.POST, request.FILES, instance=gallery)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Galerie mise à jour avec succès !')
+            return redirect('gallery_list')
+    else:
+        form = GalleryForm(instance=gallery)
+    return render(request, 'admin_JESFOD/gallery_form.html', {
+        'form': form, 'gallery': gallery, 'is_admin_page': True,
+        'title': 'Modifier la Galerie'
+    })
+
+
+@login_required
+@secretaire_required
+def gallery_delete(request, pk):
+    gallery = get_object_or_404(Gallery, pk=pk)
+    if request.method == 'POST':
+        gallery.delete()
+        messages.success(request, 'Galerie supprimée avec succès !')
+        return redirect('gallery_list')
+    return render(request, 'admin_JESFOD/gallery_confirm_delete.html', {
+        'gallery': gallery, 'is_admin_page': True
+    })
 
 
 # ------------------------------------------------------------------ #
-#  EVENT CREATE                                                       #
+#  EVENT CRUD                                                         #
 # ------------------------------------------------------------------ #
 @login_required
-@bureau_required
+@secretaire_required
+def event_list(request):
+    events = Event.objects.all().order_by('-event_date')
+    return render(request, 'admin_JESFOD/event_list.html', {
+        'events': events,
+        'is_admin_page': True,
+    })
+
+
+@login_required
+@secretaire_required
 def event_create(request):
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
@@ -270,20 +343,54 @@ def event_create(request):
             event.created_by = request.user
             event.save()
             messages.success(request, 'Événement ajouté avec succès !')
-            return redirect('admin_dashboard')
+            return redirect('event_list')
     else:
         form = EventForm()
-    return render(request, 'admin_JESFOD/event_form.html', {'form': form, 'is_admin_page': True})
+    return render(request, 'admin_JESFOD/event_form.html', {
+        'form': form, 'is_admin_page': True, 'title': 'Créer un Nouvel Événement'
+    })
+
+
+@login_required
+@secretaire_required
+def event_update(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    if request.method == 'POST':
+        form = EventForm(request.POST, request.FILES, instance=event)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Événement mis à jour avec succès !')
+            return redirect('event_list')
+    else:
+        form = EventForm(instance=event)
+    return render(request, 'admin_JESFOD/event_form.html', {
+        'form': form, 'event': event, 'is_admin_page': True,
+        'title': 'Modifier l\'Événement'
+    })
+
+
+@login_required
+@secretaire_required
+def event_delete(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    if request.method == 'POST':
+        event.delete()
+        messages.success(request, 'Événement supprimé avec succès !')
+        return redirect('event_list')
+    return render(request, 'admin_JESFOD/event_confirm_delete.html', {
+        'event': event, 'is_admin_page': True
+    })
 
 
 # ------------------------------------------------------------------ #
 #  FINANCE MANAGEMENT                                                 #
 # ------------------------------------------------------------------ #
 @login_required
-@bureau_required
+@tresorier_required
 def finance_list(request):
     """Overview table: all members with their financial situation."""
     members = Member.objects.prefetch_related('finances').all().order_by('name')
+    recent_entries = FinanceEntry.objects.all()[:50]
 
     total_inscriptions = FinanceEntry.objects.filter(type='inscription', is_paid=True).aggregate(
         s=Sum('amount'))['s'] or 0
@@ -296,6 +403,7 @@ def finance_list(request):
 
     context = {
         'members': members,
+        'recent_entries': recent_entries,
         'total_inscriptions': total_inscriptions,
         'total_fdr': total_fdr,
         'total_amendes_collected': total_amendes_collected,
@@ -305,8 +413,9 @@ def finance_list(request):
     return render(request, 'admin_JESFOD/finance_list.html', context)
 
 
+
 @login_required
-@bureau_required
+@tresorier_required
 def finance_create(request):
     """Create a finance entry for any member."""
     if request.method == 'POST':
@@ -314,8 +423,16 @@ def finance_create(request):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.recorded_by = request.user
+            if entry.is_paid and not entry.date_paid:
+                entry.date_paid = timezone.now()
             entry.save()
-            messages.success(request, f'Entrée financière ajoutée pour {entry.member.name}.')
+            if entry.is_paid:
+                if _send_receipt_email(entry, request):
+                    messages.success(request, f'Entrée financière ajoutée pour {entry.member.name} et reçu envoyé par e-mail.')
+                else:
+                    messages.success(request, f'Entrée financière ajoutée pour {entry.member.name}.')
+            else:
+                messages.success(request, f'Entrée financière ajoutée pour {entry.member.name}.')
             return redirect('finance_list')
     else:
         # Pre-fill member if provided in GET param
@@ -335,14 +452,24 @@ def finance_create(request):
 
 
 @login_required
-@bureau_required
+@tresorier_required
 def finance_update(request, pk):
     entry = get_object_or_404(FinanceEntry, pk=pk)
     if request.method == 'POST':
         form = FinanceEntryForm(request.POST, instance=entry)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Entrée financière mise à jour.')
+            was_paid = entry.is_paid
+            entry = form.save(commit=False)
+            if entry.is_paid and not entry.date_paid:
+                entry.date_paid = timezone.now()
+            entry.save()
+            if entry.is_paid and not was_paid:
+                if _send_receipt_email(entry, request):
+                    messages.success(request, 'Entrée financière mise à jour et reçu envoyé par e-mail.')
+                else:
+                    messages.success(request, 'Entrée financière mise à jour.')
+            else:
+                messages.success(request, 'Entrée financière mise à jour.')
             return redirect('finance_list')
     else:
         form = FinanceEntryForm(instance=entry)
@@ -352,7 +479,7 @@ def finance_update(request, pk):
 
 
 @login_required
-@bureau_required
+@tresorier_required
 def finance_delete(request, pk):
     entry = get_object_or_404(FinanceEntry, pk=pk)
     if request.method == 'POST':
@@ -366,7 +493,7 @@ def finance_delete(request, pk):
 
 
 @login_required
-@bureau_required
+@tresorier_required
 def finance_mark_paid(request, pk):
     """Quick-mark an entry as paid via POST."""
     entry = get_object_or_404(FinanceEntry, pk=pk)
@@ -374,7 +501,11 @@ def finance_mark_paid(request, pk):
         entry.is_paid = True
         entry.date_paid = timezone.now()
         entry.save()
-        messages.success(request, f'✓ {entry.member.name} — {entry.get_type_display()} marqué payé.')
+        sent = _send_receipt_email(entry, request)
+        if sent:
+            messages.success(request, f'✓ {entry.member.name} — {entry.get_type_display()} marqué payé. Reçu envoyé par e-mail.')
+        else:
+            messages.success(request, f'✓ {entry.member.name} — {entry.get_type_display()} marqué payé.')
     return redirect('finance_list')
 
 # ------------------------------------------------------------------ #
@@ -384,7 +515,7 @@ from menber_JESFOD.models import Seance, Absence
 from .forms import SeanceForm, AbsenceForm
 
 @login_required
-@bureau_required
+@secretaire_required
 def seance_list(request):
     seances = Seance.objects.all().order_by('-date')
     return render(request, 'admin_JESFOD/seance_list.html', {
@@ -393,7 +524,7 @@ def seance_list(request):
     })
 
 @login_required
-@bureau_required
+@secretaire_required
 def seance_create(request):
     if request.method == 'POST':
         form = SeanceForm(request.POST)
@@ -406,10 +537,43 @@ def seance_create(request):
     return render(request, 'admin_JESFOD/seance_form.html', {
         'form': form,
         'is_admin_page': True,
+        'title': 'Enregistrer une Séance',
+    })
+
+
+@login_required
+@secretaire_required
+def seance_update(request, pk):
+    seance = get_object_or_404(Seance, pk=pk)
+    if request.method == 'POST':
+        form = SeanceForm(request.POST, instance=seance)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Séance mise à jour avec succès.')
+            return redirect('seance_list')
+    else:
+        form = SeanceForm(instance=seance)
+    return render(request, 'admin_JESFOD/seance_form.html', {
+        'form': form, 'seance': seance,
+        'is_admin_page': True,
+        'title': 'Modifier la Séance',
+    })
+
+
+@login_required
+@secretaire_required
+def seance_delete(request, pk):
+    seance = get_object_or_404(Seance, pk=pk)
+    if request.method == 'POST':
+        seance.delete()
+        messages.success(request, 'Séance supprimée avec succès.')
+        return redirect('seance_list')
+    return render(request, 'admin_JESFOD/seance_confirm_delete.html', {
+        'seance': seance, 'is_admin_page': True
     })
 
 @login_required
-@bureau_required
+@secretaire_required
 def absence_list(request):
     absences = Absence.objects.select_related('member', 'seance').all().order_by('-seance__date')
     return render(request, 'admin_JESFOD/absence_list.html', {
@@ -418,7 +582,7 @@ def absence_list(request):
     })
 
 @login_required
-@bureau_required
+@secretaire_required
 def absence_create(request):
     if request.method == 'POST':
         form = AbsenceForm(request.POST)
@@ -453,7 +617,7 @@ def render_to_pdf(template_src, context_dict={}):
         return HttpResponse("xhtml2pdf n'est pas installé.")
 
 @login_required
-@bureau_required
+@tresorier_required
 def export_finance_pdf(request):
     members = Member.objects.prefetch_related('finances').all().order_by('name')
     total_inscriptions = FinanceEntry.objects.filter(type='inscription', is_paid=True).aggregate(s=Sum('amount'))['s'] or 0
@@ -492,7 +656,7 @@ def export_members_pdf(request):
     return response
 
 @login_required
-@bureau_required
+@secretaire_required
 def export_absences_pdf(request):
     absences = Absence.objects.select_related('member', 'seance').all().order_by('-seance__date')
     context = {
@@ -505,3 +669,97 @@ def export_absences_pdf(request):
     if isinstance(response, HttpResponse) and response.get('Content-Type') == 'application/pdf':
         response['Content-Disposition'] = 'attachment; filename="liste_absences_jesfod.pdf"'
     return response
+
+# ------------------------------------------------------------------ #
+#  RAPPELS EMAILS & REÇUS                                             #
+# ------------------------------------------------------------------ #
+@login_required
+@secretaire_required
+def send_seance_reminder(request, pk):
+    seance = get_object_or_404(Seance, pk=pk)
+    members = Member.objects.exclude(email='')
+    emails = [m.email for m in members]
+    if emails:
+        subject = f"Rappel de séance: {seance.title}"
+        message = f"Bonjour,\n\nN'oubliez pas notre séance '{seance.title}' prévue le {seance.date.strftime('%d/%m/%Y')}.\n\nL'équipe JESFOD"
+        try:
+            send_mail(subject, message, settings.EMAIL_HOST_USER, emails, fail_silently=True)
+            messages.success(request, f"Rappel envoyé pour la séance {seance.title}.")
+        except Exception as e:
+            messages.error(request, f"Erreur lors de l'envoi de l'email: {e}")
+    else:
+        messages.warning(request, "Aucun membre avec adresse email trouvé.")
+    return redirect('seance_list')
+
+@login_required
+@tresorier_required
+def send_finance_reminder(request, pk):
+    entry = get_object_or_404(FinanceEntry, pk=pk)
+    if entry.is_paid:
+        messages.warning(request, "Cette entrée est déjà payée.")
+        return redirect('finance_list')
+    if entry.member.email:
+        subject = f"Rappel de paiement: {entry.get_type_display()}"
+        message = f"Bonjour {entry.member.name},\n\nSauf erreur de notre part, vous n'avez pas encore réglé votre {entry.get_type_display()} d'un montant de {entry.amount} FCFA.\n\nMerci de régulariser votre situation.\n\nL'équipe JESFOD"
+        try:
+            send_mail(subject, message, settings.EMAIL_HOST_USER, [entry.member.email], fail_silently=True)
+            messages.success(request, f"Rappel envoyé à {entry.member.name}.")
+        except Exception as e:
+            messages.error(request, f"Erreur lors de l'envoi: {e}")
+    else:
+        messages.warning(request, f"Aucune adresse email pour {entry.member.name}.")
+    return redirect('finance_list')
+
+@login_required
+@tresorier_required
+def export_receipt_pdf(request, pk):
+    entry = get_object_or_404(FinanceEntry, pk=pk, is_paid=True)
+    context = {
+        'entry': entry,
+        'date': timezone.now(),
+        'request': request,
+        'logo_url': request.build_absolute_uri('/static/images/logo.jpeg'),
+    }
+    response = render_to_pdf('admin_JESFOD/pdf_receipt.html', context)
+    if isinstance(response, HttpResponse) and response.get('Content-Type') == 'application/pdf':
+        response['Content-Disposition'] = f'attachment; filename="recu_{entry.id}.pdf"'
+    return response
+
+
+def _send_receipt_email(entry, request=None):
+    if not entry.is_paid or not entry.member or not entry.member.email:
+        return False
+    
+    try:
+        context = {
+            'entry': entry,
+            'date': timezone.now(),
+            'request': request,
+            'logo_url': request.build_absolute_uri('/static/images/logo.jpeg') if request else '',
+        }
+        pdf_file = render_to_pdf('admin_JESFOD/pdf_receipt.html', context)
+        
+        subject = f"Reçu de paiement JESFOD - {entry.get_type_display()}"
+        body = (
+            f"Bonjour {entry.member.name},\n\n"
+            f"Nous vous confirmons la bonne réception de votre paiement pour '{entry.get_type_display()}' d'un montant de {entry.amount} FCFA.\n"
+            f"Vous trouverez ci-joint votre reçu officiel au format PDF.\n\n"
+            f"Merci pour votre confiance !\nL'équipe JESFOD"
+        )
+        
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=settings.EMAIL_HOST_USER,
+            to=[entry.member.email],
+        )
+        if isinstance(pdf_file, HttpResponse) and pdf_file.get('Content-Type') == 'application/pdf':
+            email.attach(f"recu_{entry.id}.pdf", pdf_file.content, 'application/pdf')
+        
+        email.send(fail_silently=True)
+        return True
+    except Exception as e:
+        print(f"Error sending receipt email: {e}")
+        return False
+
+

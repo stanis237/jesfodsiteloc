@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ target_member.name }} - Membre JESFOD{% endblock %}
+
+{% block content %}
+<section class="py-5 mt-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden mb-4">
+          <div class="card-header bg-gradient-primary text-white py-4 d-flex align-items-center">
+            <a href="{% url 'home' %}#bureau" class="btn btn-sm btn-light rounded-pill me-3" title="Retour">
+              <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0 fw-bold">Profil du Membre</h4>
+          </div>
+          <div class="card-body p-5">
+            <div class="row align-items-center">
+              <div class="col-md-4 text-center mb-4 mb-md-0">
+                {% if target_member.profile_photo %}
+                  <img src="{{ target_member.profile_photo.url }}" alt="{{ target_member.name }}" 
+                       class="img-fluid rounded-circle shadow border border-3 border-primary" 
+                       style="width: 180px; height: 180px; object-fit: cover;">
+                {% else %}
+                  <div class="rounded-circle shadow d-flex align-items-center justify-content-center fw-bold text-white mx-auto border border-3 border-primary" 
+                       style="width: 180px; height: 180px; background: linear-gradient(135deg, #0d6efd, #6610f2); font-size: 5rem;">
+                    {{ target_member.name.0|upper }}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-md-8">
+                <h2 class="fw-bold mb-1">{{ target_member.name }}</h2>
+                <p class="text-primary fw-semibold fs-5 mb-3">
+                  <i class="bi bi-person-badge me-2"></i>
+                  {% if target_member.role == 'bureau' %}
+                    {{ target_member.get_position_display }}
+                  {% else %}
+                    Membre
+                  {% endif %}
+                </p>
+                
+                <hr>
+                
+                <ul class="list-unstyled mb-0">
+                  <li class="mb-2">
+                    <i class="bi bi-envelope text-muted me-2"></i> 
+                    {% if target_member.email %}<a href="mailto:{{ target_member.email }}" class="text-decoration-none">{{ target_member.email }}</a>{% else %}Non renseigné{% endif %}
+                  </li>
+                  {% if target_member.role == 'bureau' %}
+                    <li class="mb-2">
+                      <i class="bi bi-star-fill text-warning me-2"></i> Membre du Bureau Exécutif
+                    </li>
+                  {% endif %}
+                  {% if target_member.is_certified %}
+                    <li class="mb-2">
+                      <i class="bi bi-patch-check-fill text-success me-2"></i> Membre Certifié JESFOD
+                    </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </div>
+            
+            {% if target_member.activities %}
+            <div class="mt-4 pt-4 border-top">
+              <h5 class="fw-bold mb-3"><i class="bi bi-briefcase me-2 text-primary"></i>Activités et responsabilités</h5>
+              <div class="bg-light p-4 rounded-3 text-muted" style="white-space: pre-line;">
+                {{ target_member.activities }}
+              </div>
+            </div>
+            {% endif %}
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

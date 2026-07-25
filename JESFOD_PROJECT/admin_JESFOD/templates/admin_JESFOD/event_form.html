@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}Créer un Événement - JESFOD{% endblock %}
+{% block title %}{{ title|default:"Événement" }} - JESFOD{% endblock %}
 {% block content %}
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-lg-8 col-md-10">
       <div class="card shadow-lg border-0 rounded-4 overflow-hidden animate__animated animate__fadeInUp">
-        <div class="card-header bg-primary text-white py-4 text-center">
+        <div class="card-header text-white py-4 text-center" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
           <i class="bi bi-calendar-event fs-1 mb-2"></i>
-          <h2 class="fw-bold mb-0">Créer un Nouvel Événement</h2>
+          <h2 class="fw-bold mb-0">{{ title|default:"Événement" }}</h2>
         </div>
         <div class="card-body p-4 p-md-5">
           {% if messages %}
@@ -18,6 +18,14 @@
               </div>
             {% endfor %}
           {% endif %}
+
+          {% if event.image %}
+          <div class="mb-4 text-center">
+            <p class="text-muted small mb-2">Image actuelle :</p>
+            <img src="{{ event.image.url }}" alt="{{ event.title }}" class="img-fluid rounded-3 shadow-sm" style="max-height: 200px; object-fit: cover;">
+          </div>
+          {% endif %}
+
           <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
@@ -58,8 +66,10 @@
             </div>
 
             <div class="d-flex gap-3 justify-content-end mt-5">
-              <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">Annuler</a>
-              <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold">Créer l'événement</button>
+              <a href="{% url 'event_list' %}" class="btn btn-outline-secondary rounded-pill px-4">Annuler</a>
+              <button type="submit" class="btn rounded-pill px-5 fw-bold text-white" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                {% if event %}<i class="bi bi-check-lg me-2"></i>Mettre à jour{% else %}<i class="bi bi-plus-circle me-2"></i>Créer l'événement{% endif %}
+              </button>
             </div>
           </form>
         </div>

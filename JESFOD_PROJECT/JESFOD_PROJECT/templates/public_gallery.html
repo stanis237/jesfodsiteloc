@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Galerie Photos - JESFOD Douala{% endblock %}
+{% block meta_description %}Explorez la galerie photos des événements, réunions et activités de l'association JESFOD Douala. Téléchargez vos photos préférées.{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="py-5 text-white text-center position-relative" style="background: linear-gradient(135deg, rgba(13, 202, 240, 0.9), rgba(10, 162, 192, 0.95)), url('/static/images/cp4.jpg') center/cover no-repeat;">
+  <div class="container py-4">
+    <h1 class="display-4 fw-bold mb-2">Galerie Photos</h1>
+    <p class="lead text-white-50 mx-auto" style="max-width: 650px;">
+      Découvrez les moments forts de l'association JESFOD Douala à travers nos photos et téléchargez-les gratuitement.
+    </p>
+  </div>
+</section>
+
+<!-- Gallery Grid Section -->
+<section class="py-5 bg-light">
+  <div class="container py-3">
+    <div class="row g-4">
+      {% for item in galleries %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-shadow transition bg-white">
+          {% if item.image %}
+          <div class="position-relative overflow-hidden group">
+            <img src="{{ item.image.url }}" class="card-img-top gallery-img" alt="{{ item.title }}" style="height: 250px; object-fit: cover; transition: transform 0.3s ease;">
+            <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-dark bg-opacity-50 d-flex justify-content-between align-items-center opacity-90">
+              <button type="button" class="btn btn-sm btn-light rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#imageModal{{ item.pk }}">
+                <i class="bi bi-arrows-angle-expand me-1"></i>Agrandir
+              </button>
+              <a href="{% url 'download_photo' item.pk %}" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold">
+                <i class="bi bi-download me-1"></i>Télécharger
+              </a>
+            </div>
+          </div>
+          {% endif %}
+          <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-2">{{ item.title }}</h5>
+            {% if item.description %}
+            <p class="text-secondary small mb-3">{{ item.description }}</p>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}</small>
+              <a href="{% url 'download_photo' item.pk %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                <i class="bi bi-download me-1"></i>Télécharger
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal for Lightbox preview -->
+      {% if item.image %}
+      <div class="modal fade" id="imageModal{{ item.pk }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content rounded-4 border-0 overflow-hidden">
+            <div class="modal-header border-0 bg-dark text-white">
+              <h5 class="modal-title fw-bold">{{ item.title }}</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 text-center bg-dark">
+              <img src="{{ item.image.url }}" alt="{{ item.title }}" class="img-fluid" style="max-height: 80vh; object-fit: contain;">
+            </div>
+            <div class="modal-footer border-0 bg-dark text-white d-flex justify-content-between">
+              <span class="small text-white-50">{{ item.description|default:"" }}</span>
+              <a href="{% url 'download_photo' item.pk %}" class="btn btn-warning rounded-pill px-4 fw-bold">
+                <i class="bi bi-download me-1"></i>Télécharger la photo
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% empty %}
+      <div class="col-12 text-center py-5">
+        <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+          <i class="bi bi-images display-1 text-muted mb-3"></i>
+          <h4 class="fw-bold text-muted">Aucune photo dans la galerie</h4>
+          <p class="text-muted mb-0">La galerie sera bientôt alimentée par l'administration.</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .hover-shadow:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12) !important;
+  }
+  .hover-shadow:hover .gallery-img {
+    transform: scale(1.04);
+  }
+</style>
+{% endblock %}

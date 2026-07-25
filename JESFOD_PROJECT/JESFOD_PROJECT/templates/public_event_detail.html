@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.title }} - Événements JESFOD{% endblock %}
+{% block meta_description %}{{ event.description|truncatechars:150 }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-4">
+  <div class="row g-4">
+    <!-- Main Detail -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        {% if event.image %}
+        <img src="{{ event.image.url }}" class="img-fluid w-100" alt="{{ event.title }}" style="max-height: 400px; object-fit: cover;">
+        {% endif %}
+        <div class="card-body p-4 p-md-5">
+          <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+            <span class="badge bg-primary px-3 py-2 rounded-pill fs-6">
+              <i class="bi bi-clock me-1"></i>{{ event.event_date|date:"d F Y à H:i" }}
+            </span>
+            {% if event.location %}
+            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fs-6">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ event.location }}
+            </span>
+            {% endif %}
+          </div>
+
+          <h1 class="fw-bold mb-4 text-dark">{{ event.title }}</h1>
+          
+          <div class="lead text-secondary mb-4 style-description" style="line-height: 1.8; white-space: pre-line;">
+            {{ event.description }}
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <a href="{% url 'public_events' %}" class="btn btn-outline-secondary rounded-pill px-4">
+              <i class="bi bi-arrow-left me-2"></i>Retour aux événements
+            </a>
+            <div class="d-flex gap-2 align-items-center">
+              <span class="small text-muted me-2">Partager :</span>
+              <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle">
+                <i class="bi bi-facebook"></i>
+              </a>
+              <a href="https://api.whatsapp.com/send?text={{ event.title }} - {{ request.build_absolute_uri }}" target="_blank" class="btn btn-sm btn-outline-success rounded-circle">
+                <i class="bi bi-whatsapp"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-calendar-check text-primary me-2"></i>Autres Événements</h5>
+        <div class="d-flex flex-column gap-3">
+          {% for other in recent_events %}
+          <a href="{% url 'public_event_detail' other.pk %}" class="text-decoration-none text-dark card-hover rounded-3 p-2 border border-light">
+            <div class="d-flex gap-3 align-items-center">
+              {% if other.image %}
+              <img src="{{ other.image.url }}" alt="{{ other.title }}" class="rounded-3" style="width: 70px; height: 50px; object-fit: cover;">
+              {% else %}
+              <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 50px;">
+                <i class="bi bi-calendar-event text-muted"></i>
+              </div>
+              {% endif %}
+              <div>
+                <h6 class="fw-bold mb-1 small text-truncate" style="max-width: 180px;">{{ other.title }}</h6>
+                <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ other.event_date|date:"d/m/Y" }}</small>
+              </div>
+            </div>
+          </a>
+          {% empty %}
+          <p class="text-muted small mb-0">Aucun autre événement pour le moment.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Quick Contact Widget -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #0056b3, #198754);">
+        <h5 class="fw-bold mb-2">Besoin d'informations ?</h5>
+        <p class="small text-white-50 mb-3">Pour toute question sur nos événements ou l'association JESFOD, n'hésitez pas à nous contacter.</p>
+        <a href="{% url 'home' %}#contact" class="btn btn-warning rounded-pill btn-sm fw-bold">Nous contacter</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -60,6 +60,22 @@ class FinanceEntryForm(forms.ModelForm):
             'notes': 'Notes / Motif',
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        member = cleaned_data.get("member")
+        finance_type = cleaned_data.get("type")
+
+        if member and finance_type == 'inscription':
+            # Check if this is a new instance or an update
+            qs = FinanceEntry.objects.filter(member=member, type='inscription')
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            
+            if qs.exists():
+                self.add_error('type', 'Ce membre a déjà payé ou enregistré une inscription. L\'inscription est unique.')
+        
+        return cleaned_data
+
 
 class AdminMemberForm(forms.ModelForm):
     class Meta:
@@ -89,6 +105,12 @@ class AdminMemberForm(forms.ModelForm):
             'activities': 'Activités et responsabilités',
             'is_certified': 'Membre certifié',
         }
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '').strip()
+        if not name:
+            raise forms.ValidationError("Le nom complet est obligatoire.")
+        return name
 
 
 from menber_JESFOD.models import Seance, Absence

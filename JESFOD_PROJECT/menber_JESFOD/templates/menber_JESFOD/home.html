@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Accueil - JESFOD Douala{% endblock %}
 {% block meta_description %}Association des Jeunes solidaires de Fonakeukeu Douala - Éducation, culture, développement social, réunions et activités pour membres.{% endblock %}
 {% block og_title %}Accueil - JESFOD{% endblock %}
@@ -6,7 +8,7 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section id="accueil" class="hero-section text-white position-relative py-5 overflow-hidden" style="background: linear-gradient(135deg, rgba(0,86,179,0.9), rgba(25,135,84,0.85)), url('/static/images/cp4.jpg') center/cover no-repeat; min-height: 75vh; display: flex; align-items: center;">
+<section id="accueil" class="hero-section text-white position-relative py-5 overflow-hidden" style="background: linear-gradient(135deg, rgba(0,86,179,0.9), rgba(25,135,84,0.85)), url('{% static 'images/cp4.jpg' %}') center/cover no-repeat; min-height: 75vh; display: flex; align-items: center;">
   <div class="container text-center py-4">
     <div class="row justify-content-center">
       <div class="col-lg-9 animate__animated animate__fadeInUp">
@@ -48,7 +50,7 @@
       <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-primary text-white h-100">
           <i class="bi bi-people fs-1 mb-1"></i>
-          <div class="fs-2 fw-bold">{{ total_members_count|default:150 }}</div>
+          <div class="fs-2 fw-bold">{{ total_members|default:150 }}</div>
           <div class="small text-white-50 text-uppercase fw-bold">Membres Inscrits</div>
         </div>
       </div>
@@ -62,7 +64,7 @@
       <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-warning text-dark h-100">
           <i class="bi bi-newspaper fs-1 mb-1"></i>
-          <div class="fs-2 fw-bold">{{ news|length }}</div>
+          <div class="fs-2 fw-bold">{{ total_news|default:news|length }}</div>
           <div class="small text-dark-50 text-uppercase fw-bold">Actualités</div>
         </div>
       </div>
@@ -131,7 +133,7 @@
       <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">Vie de l'Association</span>
       <h2 class="fw-bold">Réunions & Membres de la Réunion</h2>
       <p class="text-muted col-lg-8 mx-auto">
-        Consultez l'historique et le programme des réunions ordinaires ainsi que tous les membres de la réunion.
+        Consultez le programme des réunions ordinaires ainsi que tous les membres enregistrés.
         Toute personne inscrite s'affiche automatiquement ci-dessous !
       </p>
     </div>
@@ -185,7 +187,7 @@
     <!-- Cartes des Membres de la Réunion (Affichage Automatique après inscription) -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
       <h3 class="h4 fw-bold mb-0 text-dark">
-        <i class="bi bi-person-lines-fill me-2 text-success"></i>Membres de la Réunion ({{ total_members_count }})
+        <i class="bi bi-person-lines-fill me-2 text-success"></i>Membres Inscrits ({{ total_members }})
       </h3>
       {% if not user.is_authenticated %}
         <a href="{% url 'register' %}" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
@@ -279,6 +281,51 @@
   </div>
 </section>
 
+<!-- Events Section -->
+<section id="events" class="py-5 bg-white border-bottom">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h2 class="fw-bold mb-0">Événements à Venir & Activités</h2>
+        <p class="text-muted mb-0 small">Rejoignez-nous lors des prochains événements de l'association</p>
+      </div>
+      <a href="{% url 'public_events' %}" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
+        Tous les événements <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="row g-4">
+      {% for event in events %}
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+          {% if event.image %}
+          <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+          {% else %}
+          <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+            <i class="bi bi-calendar-event display-4 text-primary opacity-50"></i>
+          </div>
+          {% endif %}
+          <div class="card-body p-4 d-flex flex-column">
+            <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1 mb-2 align-self-start small">
+              <i class="bi bi-clock me-1"></i>{{ event.event_date|date:"d/m/Y H:i" }}
+            </span>
+            <h5 class="card-title fw-bold text-dark mb-2">{{ event.title }}</h5>
+            {% if event.location %}
+            <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ event.location }}</p>
+            {% endif %}
+            <p class="card-text text-muted small flex-grow-1">{{ event.description|truncatechars:90 }}</p>
+            <a href="{% url 'public_event_detail' event.pk %}" class="btn btn-sm btn-outline-primary rounded-pill mt-3 align-self-start fw-semibold">
+              Détails <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center text-muted py-4">Aucun événement à venir pour le moment.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 <!-- News Section -->
 <section id="news" class="py-5 bg-light border-bottom">
   <div class="container">
@@ -294,16 +341,23 @@
     <div class="row g-4">
       {% for item in news %}
       <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-shadow transition">
           {% if item.image %}
-          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
+          <a href="{% url 'news_detail' item.pk %}">
+            <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
+          </a>
           {% endif %}
-          <div class="card-body p-4">
-            <h5 class="card-title fw-bold text-dark">{{ item.title }}</h5>
-            <p class="card-text text-muted small">{{ item.content|truncatechars:100 }}</p>
-          </div>
-          <div class="card-footer bg-transparent border-0 px-4 pb-3">
-            <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}</small>
+          <div class="card-body p-4 d-flex flex-column">
+            <h5 class="card-title fw-bold text-dark mb-2">
+              <a href="{% url 'news_detail' item.pk %}" class="text-decoration-none text-dark hover-primary">{{ item.title }}</a>
+            </h5>
+            <p class="card-text text-muted small flex-grow-1">{{ item.content|truncatechars:100 }}</p>
+            <div class="pt-3 border-top d-flex justify-content-between align-items-center mt-auto">
+              <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}</small>
+              <a href="{% url 'news_detail' item.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                Lire la suite <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -317,13 +371,33 @@
 <!-- Galerie Section -->
 <section id="galerie" class="py-5 bg-white border-bottom">
   <div class="container">
-    <h2 class="text-center fw-bold mb-4">Galerie Photos</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h2 class="fw-bold mb-0">Galerie Photos</h2>
+        <p class="text-muted mb-0 small">Aperçu des récents événements et activités en images</p>
+      </div>
+      <a href="{% url 'public_gallery' %}" class="btn btn-outline-info rounded-pill px-3 fw-semibold">
+        Toutes les photos <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
     <div class="row g-4">
       {% for item in galleries %}
       <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-shadow transition bg-white">
           {% if item.image %}
-          <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
+          <div class="position-relative overflow-hidden">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#homeGalleryModal{{ item.pk }}">
+              <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
+            </a>
+            <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 d-flex justify-content-between align-items-center">
+              <button type="button" class="btn btn-sm btn-light rounded-pill px-3 py-1" data-bs-toggle="modal" data-bs-target="#homeGalleryModal{{ item.pk }}">
+                <i class="bi bi-arrows-angle-expand me-1"></i>Ouvrir
+              </button>
+              <a href="{% url 'download_photo' item.pk %}" class="btn btn-sm btn-warning rounded-pill px-3 py-1 fw-bold">
+                <i class="bi bi-download me-1"></i>Télécharger
+              </a>
+            </div>
+          </div>
           {% endif %}
           <div class="card-body">
             <h6 class="fw-bold mb-1">{{ item.title }}</h6>
@@ -331,6 +405,30 @@
           </div>
         </div>
       </div>
+
+      <!-- Lightbox Modal for Homepage Gallery Item -->
+      {% if item.image %}
+      <div class="modal fade" id="homeGalleryModal{{ item.pk }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content rounded-4 border-0 overflow-hidden">
+            <div class="modal-header border-0 bg-dark text-white">
+              <h5 class="modal-title fw-bold">{{ item.title }}</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 text-center bg-dark">
+              <img src="{{ item.image.url }}" alt="{{ item.title }}" class="img-fluid" style="max-height: 80vh; object-fit: contain;">
+            </div>
+            <div class="modal-footer border-0 bg-dark text-white d-flex justify-content-between">
+              <span class="small text-white-50">{{ item.description|default:"" }}</span>
+              <a href="{% url 'download_photo' item.pk %}" class="btn btn-warning rounded-pill px-4 fw-bold">
+                <i class="bi bi-download me-1"></i>Télécharger la photo
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
       {% empty %}
       <div class="col-12 text-center text-muted py-3">Aucune photo dans la galerie.</div>
       {% endfor %}

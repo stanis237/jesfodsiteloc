@@ -50,6 +50,7 @@ class Member(models.Model):
         ('charge_com', 'Chargé(e) de Communication'),
         ('conseiller', 'Conseiller(e)'),
         ('membre', 'Membre du Bureau'),
+        ('membre_reunion', 'Membre de Réunion'),
     ]
     SCHOOL_LEVEL_CHOICES = [
         ('primaire', 'Primaire'),

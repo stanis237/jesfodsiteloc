@@ -13,10 +13,11 @@
 
           {% if form.errors %}
             <div class="alert alert-danger rounded-3 mb-4">
+              <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-2"></i>Erreurs de saisie :</h6>
               <ul class="mb-0 ps-3">
                 {% for field, errors in form.errors.items %}
                   {% for error in errors %}
-                    <li>{{ error }}</li>
+                    <li><strong>{% if field != '__all__' %}{{ field|title }} : {% endif %}</strong>{{ error }}</li>
                   {% endfor %}
                 {% endfor %}
               </ul>
@@ -27,40 +28,49 @@
             {% csrf_token %}
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label fw-bold small text-muted">Nom d'utilisateur</label>
+                <label class="form-label fw-bold small text-muted">Nom d'utilisateur <span class="text-danger">*</span></label>
                 {{ form.username }}
+                {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold small text-muted">Nom Complet</label>
+                <label class="form-label fw-bold small text-muted">Nom Complet <span class="text-danger">*</span></label>
                 {{ form.name }}
+                {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold small text-muted">Adresse Email</label>
+                <label class="form-label fw-bold small text-muted">Adresse Email <span class="text-danger">*</span></label>
                 {{ form.email }}
+                {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-bold small text-muted">Numéro de Téléphone</label>
                 {{ form.phone }}
+                {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-bold small text-muted">Photo de profil</label>
                 {{ form.profile_photo }}
+                {% if form.profile_photo.errors %}<div class="text-danger small mt-1">{{ form.profile_photo.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-bold small text-muted">Niveau d'études</label>
                 {{ form.school_level }}
+                {% if form.school_level.errors %}<div class="text-danger small mt-1">{{ form.school_level.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-12">
-                <label class="form-label fw-bold small text-muted">Rôle / Statut</label>
+                <label class="form-label fw-bold small text-muted">Rôle / Statut <span class="text-danger">*</span></label>
                 {{ form.role }}
+                {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold small text-muted">Mot de passe</label>
+                <label class="form-label fw-bold small text-muted">Mot de passe <span class="text-danger">*</span></label>
                 {{ form.password1 }}
+                {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.as_text }}</div>{% endif %}
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold small text-muted">Confirmer le mot de passe</label>
+                <label class="form-label fw-bold small text-muted">Confirmer le mot de passe <span class="text-danger">*</span></label>
                 {{ form.password2 }}
+                {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.as_text }}</div>{% endif %}
               </div>
             </div>
             <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-bold shadow-sm mt-4">

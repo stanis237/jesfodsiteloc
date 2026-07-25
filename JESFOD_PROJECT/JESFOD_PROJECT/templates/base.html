@@ -36,6 +36,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{% url 'pwa_manifest' %}">
+    <meta name="theme-color" content="#0056b3">
+
     {% block extra_head %}{% endblock %}
     
     <!-- Structured Data JSON-LD -->
@@ -92,13 +97,13 @@
                     <a class="nav-link nav-pill-link" href="{% url 'home' %}"><i class="bi bi-house-door me-1"></i>Accueil</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link nav-pill-link" href="#bureau"><i class="bi bi-people me-1"></i>Bureau</a>
+                    <a class="nav-link nav-pill-link" href="{% url 'public_events' %}"><i class="bi bi-calendar-event me-1"></i>Événements</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link nav-pill-link" href="#news"><i class="bi bi-newspaper me-1"></i>Actualités</a>
+                    <a class="nav-link nav-pill-link" href="{% url 'public_gallery' %}"><i class="bi bi-images me-1"></i>Galerie</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link nav-pill-link" href="#galerie"><i class="bi bi-images me-1"></i>Galerie</a>
+                    <a class="nav-link nav-pill-link" href="{% url 'home' %}#news"><i class="bi bi-newspaper me-1"></i>Actualités</a>
                 </li>
                 {% endif %}
                 {% if user.is_authenticated %}
@@ -127,8 +132,13 @@
                 {% endif %}
             </ul>
 
-            <!-- Right: Auth Buttons -->
+            <!-- Right: Auth Buttons & PWA Install Button -->
             <ul class="navbar-nav align-items-center gap-2">
+                <li class="nav-item" id="pwaInstallLi" style="display: none;">
+                    <button id="pwaInstallBtn" class="btn btn-warning btn-sm px-3 rounded-pill fw-bold text-dark shadow-sm">
+                        <i class="bi bi-download me-1"></i>Installer App
+                    </button>
+                </li>
                 {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 nav-user-btn" href="#" role="button" data-bs-toggle="dropdown">
@@ -219,8 +229,58 @@
         </div>
     </footer>
 
+    <!-- Floating PWA Install Button (Hidden by default, shown when native prompt is ready) -->
+    <div id="pwaInstallFloating" style="display: none; position: fixed; bottom: 25px; right: 25px; z-index: 99999;">
+        <button type="button" id="pwaInstallBtn" onclick="triggerNativeInstall()" class="btn btn-success btn-lg rounded-pill shadow-lg text-white fw-bold d-flex align-items-center gap-2 border border-2 border-white py-2 px-4" style="background: linear-gradient(135deg, #198754, #10b981); cursor: pointer;">
+            <i class="bi bi-cloud-arrow-down-fill fs-4"></i>
+            <span>Installer App JESFOD</span>
+        </button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    <script>
+      let deferredPrompt = null;
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register("{% url 'pwa_serviceworker' %}").catch(function(err) {
+            console.log('SW error:', err);
+          });
+        });
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent default mini-infobar and store event
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show floating button automatically when browser is ready to install
+        const floating = document.getElementById('pwaInstallFloating');
+        if (floating) {
+          floating.style.display = 'block';
+        }
+      });
+
+      async function triggerNativeInstall() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const choiceResult = await deferredPrompt.userChoice;
+          console.log('Installation outcome:', choiceResult.outcome);
+          deferredPrompt = null;
+          const floating = document.getElementById('pwaInstallFloating');
+          if (floating) {
+            floating.style.display = 'none';
+          }
+        }
+      }
+
+      window.addEventListener('appinstalled', () => {
+        const floating = document.getElementById('pwaInstallFloating');
+        if (floating) {
+          floating.style.display = 'none';
+        }
+      });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

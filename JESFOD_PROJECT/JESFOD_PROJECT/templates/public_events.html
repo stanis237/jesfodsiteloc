@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Événements - JESFOD Douala{% endblock %}
+{% block meta_description %}Découvrez tous les événements à venir et passés de l'association JESFOD Douala.{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="py-5 bg-primary text-white text-center position-relative" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(79, 70, 229, 0.9)), url('/static/images/cp4.jpg') center/cover no-repeat;">
+  <div class="container py-4">
+    <h1 class="display-4 fw-bold mb-2">Nos Événements</h1>
+    <p class="lead text-white-50 mx-auto" style="max-width: 600px;">
+      Restez informé des activités, rencontres, cérémonies et projets communautaires organisés par JESFOD.
+    </p>
+  </div>
+</section>
+
+<!-- Events Grid Section -->
+<section class="py-5 bg-light">
+  <div class="container py-3">
+    <div class="row g-4">
+      {% for event in events %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-shadow transition">
+          {% if event.image %}
+          <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}" style="height: 220px; object-fit: cover;">
+          {% else %}
+          <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 220px;">
+            <i class="bi bi-calendar-event text-primary display-4"></i>
+          </div>
+          {% endif %}
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="mb-2">
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-bold">
+                <i class="bi bi-calendar3 me-1"></i>{{ event.event_date|date:"d F Y à H:i" }}
+              </span>
+            </div>
+            <h5 class="card-title fw-bold text-dark mb-2">{{ event.title }}</h5>
+            {% if event.location %}
+            <p class="small text-muted mb-2">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ event.location }}
+            </p>
+            {% endif %}
+            <p class="card-text text-secondary small mb-4 flex-grow-1">
+              {{ event.description|truncatechars:120 }}
+            </p>
+            <div>
+              <a href="{% url 'public_event_detail' event.pk %}" class="btn btn-outline-primary rounded-pill w-100 fw-semibold">
+                En savoir plus <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-5">
+        <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+          <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+          <h4 class="fw-bold text-muted">Aucun événement à afficher</h4>
+          <p class="text-muted mb-0">Revenez bientôt pour découvrir les prochains événements organisés par JESFOD !</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

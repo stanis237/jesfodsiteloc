@@ -20,6 +20,7 @@ class CustomLoginForm(AuthenticationForm):
             'placeholder': 'Mot de passe',
         })
     )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].label = ''
@@ -36,6 +37,7 @@ class CustomRegisterForm(UserCreationForm):
     )
     name = forms.CharField(
         max_length=100,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Nom complet',
@@ -62,13 +64,14 @@ class CustomRegisterForm(UserCreationForm):
     role = forms.ChoiceField(
         choices=Member.ROLE_CHOICES,
         widget=forms.Select(attrs={'class': 'form-control', 'placeholder': 'Votre rôle'}),
-        required=True
+        required=True,
+        initial='reunion'
     )
     position = forms.ChoiceField(
         choices=Member.POSITION_CHOICES,
-        widget=forms.Select(attrs={'class': 'form-control', 'placeholder': 'Votre poste (si bureau)'}),
+        widget=forms.Select(attrs={'class': 'form-control', 'placeholder': 'Votre poste'}),
         required=False,
-        initial='membre'
+        initial='membre_reunion'
     )
 
     class Meta:
@@ -109,23 +112,70 @@ class CustomRegisterForm(UserCreationForm):
             'minlength': '8',
             'required': 'true'
         })
-        for field in self.fields.values():
-            field.label = ''
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if username and User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError("Ce nom d'utilisateur est déjà utilisé par un autre compte.")
+        return username
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '').strip()
+        if not name:
+            raise forms.ValidationError("Le nom complet est obligatoire.")
+        return name
+
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip()
+        if email and User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Cette adresse email est déjà associée à un compte.")
+        return email
 
     def clean_password1(self):
         password1 = self.cleaned_data.get('password1')
-        try:
-            validate_password(password1, self.instance)
-        except ValidationError as e:
-            raise ValidationError(e.messages)
+        if password1:
+            try:
+                validate_password(password1, self.instance)
+            except ValidationError as e:
+                raise ValidationError(e.messages)
         return password1
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if commit:
+            email = self.cleaned_data.get('email', '').strip()
+            if email and user.email != email:
+                user.email = email
+                user.save()
+
+            name = self.cleaned_data.get('name', '').strip() or user.username
+            phone = self.cleaned_data.get('phone', '').strip()
+            profile_photo = self.cleaned_data.get('profile_photo')
+            school_level = self.cleaned_data.get('school_level', '')
+            role = self.cleaned_data.get('role', 'reunion')
+            position = self.cleaned_data.get('position')
+            if role == 'reunion' or not position:
+                position = 'membre_reunion'
+
+            member, _ = Member.objects.get_or_create(user=user)
+            member.name = name
+            member.email = email or user.email
+            member.phone = phone
+            if profile_photo:
+                member.profile_photo = profile_photo
+            member.school_level = school_level
+            member.role = role
+            member.position = position
+            member.save()
+        return user
 
 
 class MemberForm(forms.ModelForm):
     class Meta:
         model = Member
         fields = ['name', 'email', 'phone', 'address', 'profile_photo',
-                  'school_level', 'role', 'position', 'is_certified']
+                  'school_level', 'role', 'position']
         widgets = {
             'role': forms.Select(attrs={'class': 'form-control'}),
             'position': forms.Select(attrs={'class': 'form-control'}),
@@ -137,7 +187,19 @@ class MemberForm(forms.ModelForm):
             'profile_photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
         labels = {
+            'name': 'Nom complet',
+            'email': 'Email',
+            'phone': 'Téléphone',
+            'address': 'Adresse',
             'profile_photo': 'Photo de profil',
             'school_level': 'Niveau scolaire',
+            'role': 'Type de membre',
             'position': 'Poste au sein du bureau',
         }
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '').strip()
+        if not name:
+            raise forms.ValidationError("Le nom complet est obligatoire.")
+        return name
+

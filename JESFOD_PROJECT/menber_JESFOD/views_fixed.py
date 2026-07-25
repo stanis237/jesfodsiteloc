@@ -1,17 +1,75 @@
-from django.shortcuts import render, redirect
+import os
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import FileResponse, Http404, JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import DetailView
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 from .forms import MemberForm, CustomLoginForm, CustomRegisterForm
 from .models import Member, News, Event, FinanceEntry
 from admin_JESFOD.models import Gallery
 
+def contact_submit(request):
+    if request.method == 'POST':
+        nom = request.POST.get('nom', '')
+        email = request.POST.get('email', '')
+        message = request.POST.get('message', '')
+        if nom and email and message:
+            subject = f"Nouveau message de contact de {nom}"
+            body = f"Nom: {nom}\nEmail: {email}\n\nMessage:\n{message}"
+            try:
+                send_mail(subject, body, settings.EMAIL_HOST_USER, [settings.EMAIL_HOST_USER], fail_silently=True)
+                return JsonResponse({'status': 'success'})
+            except Exception:
+                return JsonResponse({'status': 'error'}, status=500)
+    return JsonResponse({'status': 'invalid'}, status=400)
+
+
+def public_member_detail(request, pk):
+    target_member = get_object_or_404(Member, pk=pk)
+    return render(request, 'public_member_detail.html', {'target_member': target_member})
+
+
+def pwa_manifest(request):
+    manifest_path = os.path.join(settings.BASE_DIR, 'JESFOD_PROJECT', 'static', 'manifest.json')
+    if os.path.exists(manifest_path):
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            return HttpResponse(f.read(), content_type='application/json')
+    raise Http404("Fichier manifest.json non trouvé")
+
+
+def pwa_serviceworker(request):
+    sw_path = os.path.join(settings.BASE_DIR, 'JESFOD_PROJECT', 'static', 'sw.js')
+    if os.path.exists(sw_path):
+        with open(sw_path, 'r', encoding='utf-8') as f:
+            response = HttpResponse(f.read(), content_type='application/javascript')
+            response['Service-Worker-Allowed'] = '/'
+            return response
+    raise Http404("Fichier sw.js non trouvé")
+
+
+
 
 # ------------------------------------------------------------------ #
-#  Internal helper: handle login on POST                             #
+#  Internal helper: safely get or create member                      #
 # ------------------------------------------------------------------ #
+def _get_or_create_member(user):
+    member, created = Member.objects.get_or_create(user=user)
+    dirty = False
+    if not member.name:
+        member.name = user.get_full_name() or user.username
+        dirty = True
+    if not member.email and user.email:
+        member.email = user.email
+        dirty = True
+    if dirty:
+        member.save()
+    return member, created
+
+
 def _handle_login(request):
     if request.method != 'POST':
         return None
@@ -23,7 +81,7 @@ def _handle_login(request):
     user = authenticate(request, username=username, password=password)
     if user is not None:
         login(request, user)
-        member, _ = Member.objects.get_or_create(user=user)
+        member, _ = _get_or_create_member(user)
         if member.is_bureau:
             return redirect('admin_dashboard')
         return redirect('member_dashboard')
@@ -41,7 +99,7 @@ def home(request):
 
     member = None
     if request.user.is_authenticated:
-        member, _ = Member.objects.get_or_create(user=request.user)
+        member, _ = _get_or_create_member(request.user)
 
     # Bureau sorted by position rank
     POSITION_ORDER = {
@@ -93,18 +151,19 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            member = Member.objects.get(user=user)
+            member, _ = _get_or_create_member(user)
             # Auto-create inscription finance entry (unpaid by default)
             FinanceEntry.objects.get_or_create(
                 member=member,
                 type='inscription',
                 defaults={'amount': 500, 'is_paid': False}
             )
+            messages.success(request, f"Bienvenue {member.name} ! Votre compte a été créé avec succès.")
             if member.role == 'bureau':
                 return redirect('admin_dashboard')
             return redirect('member_dashboard')
         else:
-            messages.error(request, 'Erreur dans le formulaire. Corrigez les erreurs.')
+            messages.error(request, 'Erreur dans le formulaire. Veuillez corriger les erreurs ci-dessous.')
     else:
         form = CustomRegisterForm()
     return render(request, 'menber_JESFOD/register.html', {'form': form})
@@ -115,7 +174,7 @@ def register(request):
 # ------------------------------------------------------------------ #
 @login_required
 def member_dashboard(request):
-    member, created = Member.objects.get_or_create(user=request.user)
+    member, created = _get_or_create_member(request.user)
     if member.is_bureau:
         return redirect('admin_dashboard')
     if created:
@@ -203,9 +262,8 @@ def certification(request):
 
 
 # ------------------------------------------------------------------ #
-#  NEWS                                                               #
+#  NEWS (Public viewable)                                             #
 # ------------------------------------------------------------------ #
-@login_required
 def news_list(request):
     news = News.objects.filter(is_published=True).order_by('-created_date')
     return render(request, 'menber_JESFOD/news_list.html', {'news': news, 'is_member_page': True})
@@ -252,3 +310,34 @@ def member_activities(request):
         'activities': activities,
         'is_member_page': True,
     })
+
+
+# ------------------------------------------------------------------ #
+#  PUBLIC VISITOR VIEWS                                               #
+# ------------------------------------------------------------------ #
+def public_events(request):
+    events = Event.objects.filter(is_published=True).order_by('-event_date')
+    return render(request, 'public_events.html', {'events': events})
+
+
+def public_event_detail(request, pk):
+    event = get_object_or_404(Event, pk=pk, is_published=True)
+    recent_events = Event.objects.filter(is_published=True).exclude(pk=pk).order_by('-event_date')[:3]
+    return render(request, 'public_event_detail.html', {
+        'event': event,
+        'recent_events': recent_events,
+    })
+
+
+def public_gallery(request):
+    galleries = Gallery.objects.filter(is_published=True).order_by('-created_date')
+    return render(request, 'public_gallery.html', {'galleries': galleries})
+
+
+def download_photo(request, pk):
+    gallery = get_object_or_404(Gallery, pk=pk, is_published=True)
+    if not gallery.image or not os.path.exists(gallery.image.path):
+        raise Http404("Image introuvable.")
+    response = FileResponse(open(gallery.image.path, 'rb'), as_attachment=True)
+    return response
+

@@ -67,7 +67,28 @@ def custom_login(request):
         form = CustomLoginForm()
     return render(request, 'menber_JESFOD/login.html', {'form': form})
 
-def register(request):\n    print('=== REGISTER DEBUG ===')\n    print('Method:', request.method)\n    print('CSRF Cookie:', request.COOKIES.get('csrftoken'))\n    print('CSRF Token in POST:', request.POST.get('csrfmiddlewaretoken'))\n    print('User:', request.user)\n    if request.method == 'POST':\n        print('POST data keys:', list(request.POST.keys()))\n        print('FILES:', list(request.FILES.keys()))\n        form = CustomRegisterForm(request.POST, request.FILES)\n        print('Form valid:', form.is_valid())\n        print('Form errors:', form.errors)\n        print('Non-form errors:', form.non_field_errors())\n        if form.is_valid():\n            user = form.save()\n            login(request, user)\n            member = Member.objects.get(user=user)\n            if member.role == 'bureau':\n                return redirect('/adminjesfod/')\n            else:\n                return redirect('member_dashboard')\n        else:\n            messages.error(request, 'Erreur dans le formulaire. Corrigez les erreurs.')\n    else:\n        form = CustomRegisterForm()\n    print('Rendering form')\n    return render(request, 'menber_JESFOD/register.html', {'form': form})
+def register(request):
+    if request.method == 'POST':
+        form = CustomRegisterForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            member, _ = Member.objects.get_or_create(user=user)
+            FinanceEntry.objects.get_or_create(
+                member=member,
+                type='inscription',
+                defaults={'amount': 500, 'is_paid': False}
+            )
+            messages.success(request, f"Bienvenue {member.name} ! Votre compte a été créé avec succès.")
+            if member.role == 'bureau':
+                return redirect('admin_dashboard')
+            else:
+                return redirect('member_dashboard')
+        else:
+            messages.error(request, 'Erreur dans le formulaire. Veuillez corriger les erreurs ci-dessous.')
+    else:
+        form = CustomRegisterForm()
+    return render(request, 'menber_JESFOD/register.html', {'form': form})
 
 @login_required
 def member_dashboard(request):
@@ -118,13 +139,8 @@ def certification(request):
             messages.error(request, 'Seuls les membres du bureau peuvent être certifiés.')
     return render(request, 'menber_JESFOD/certification.html', {'member': member, 'is_member_page': True})
 
-@login_required
 def news_list(request):
-    member, _ = Member.objects.get_or_create(user=request.user)
     news = News.objects.filter(is_published=True).order_by('-created_date')
-    if not member.is_bureau:
-        # For reunion members, show all published news, not just their own
-        pass  # Remove the filter that was limiting to their own news
     return render(request, 'menber_JESFOD/news_list.html', {'news': news, 'is_member_page': True})
 
 @login_required
