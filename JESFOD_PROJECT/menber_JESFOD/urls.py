@@ -13,5 +13,6 @@ urlpatterns = [
     path('news/', news_list, name='news_list'),
 
     path('news/<int:pk>/', NewsDetailView.as_view(), name='news_detail'),
+    path('presence/mark/', mark_presence_ajax, name='mark_presence'),
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
 ]

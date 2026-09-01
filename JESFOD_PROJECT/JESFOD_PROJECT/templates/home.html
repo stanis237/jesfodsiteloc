@@ -7,9 +7,13 @@
 {% block og_description %}Rejoignez la communauté JESFOD Douala.{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section id="accueil" class="hero-section text-white position-relative py-5 overflow-hidden" style="background: linear-gradient(135deg, rgba(0,86,179,0.9), rgba(25,135,84,0.85)), url('{% static 'images/cp4.jpg' %}') center/cover no-repeat; min-height: 75vh; display: flex; align-items: center;">
-  <div class="container text-center py-4">
+<!-- Hero Section with Video Background -->
+<section id="accueil" class="hero-video-section">
+  <video class="hero-video-bg" autoplay muted loop playsinline>
+    <source src="{% static 'video/video.mp4' %}" type="video/mp4">
+  </video>
+  <div class="hero-video-overlay"></div>
+  <div class="container hero-video-content py-4">
     <div class="row justify-content-center">
       <div class="col-lg-9 animate__animated animate__fadeInUp">
         <h1 class="display-4 fw-black text-white mb-3">Bienvenue à <span class="text-warning">JESFOD</span></h1>
@@ -64,7 +68,7 @@
       <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-warning text-dark h-100">
           <i class="bi bi-newspaper fs-1 mb-1"></i>
-          <div class="fs-2 fw-bold">{{ total_news|default:news|length }}</div>
+          <div class="fs-2 fw-bold">{{ total_news|default:0 }}</div>
           <div class="small text-dark-50 text-uppercase fw-bold">Actualités</div>
         </div>
       </div>
@@ -125,121 +129,173 @@
       </div>
       {% endfor %}
     </div>
-  </div>
-</section>
-
-<!-- Section 2 : TOUT JUSTE EN BAS DU BUREAU EXÉCUTIF -> Réunions & Membres de la Réunion -->
-<section id="membres-reunions" class="py-5 bg-light border-bottom">
+ <!-- Section 2 : Réunions & Membres classés par année -->
+<section id="membres-reunions" class="py-5 border-bottom" style="background: linear-gradient(180deg, #f8faff 0%, #f0f4f8 100%);">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">Vie de l'Association</span>
-      <h2 class="fw-bold">Réunions & Membres de la Réunion</h2>
-      <p class="text-muted col-lg-8 mx-auto">
-        Consultez le programme des réunions ordinaires ainsi que tous les membres enregistrés.
-        Toute personne inscrite s'affiche automatiquement ci-dessous !
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-uppercase mb-2" style="background: linear-gradient(135deg,#198754,#20c997); color:#fff; letter-spacing:.06em;">Vie de l'Association</span>
+      <h2 class="fw-bold">Réunions &amp; Membres par Année</h2>
+      <p class="text-muted col-lg-7 mx-auto">
+        Consultez le programme des réunions et tous les membres enregistrés, classés par année d'adhésion.
       </p>
     </div>
 
-    <!-- Tableau des Réunions (Séances) -->
-    <div class="row mb-5">
-      <div class="col-12">
-        <div class="card border-0 shadow rounded-4 overflow-hidden">
-          <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-check text-warning me-2"></i>Programme des Réunions (Séances Ordinaires)</h5>
-            {% if user.is_authenticated %}
+    <!-- ===== ONGLETS ANNÉES ===== -->
+    {% if seances_by_year or members_by_year %}
+    <ul class="nav nav-pills justify-content-center gap-2 mb-4 flex-wrap" id="yearTab" role="tablist">
+      {% for year, mlist in members_by_year.items %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {% if forloop.first %}active{% endif %} rounded-pill px-4 fw-semibold"
+                id="tab-members-{{ year }}"
+                data-bs-toggle="pill"
+                data-bs-target="#panel-{{ year }}"
+                type="button" role="tab"
+                aria-controls="panel-{{ year }}"
+                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                style="border: 2px solid #198754; color:#198754;"
+                onmouseenter="this.style.background='#198754';this.style.color='#fff';"
+                onmouseleave="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#198754';}">
+          <i class="bi bi-calendar3 me-1"></i>{{ year }}
+          <span class="badge rounded-pill ms-1" style="background:rgba(25,135,84,.15);color:#198754;font-size:.7rem;">{{ mlist|length }}</span>
+        </button>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <div class="tab-content" id="yearTabContent">
+      {% for year, mlist in members_by_year.items %}
+      <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="panel-{{ year }}" role="tabpanel">
+
+        <!-- Séances de cette année -->
+        {% if seances_by_year %}
+        <div class="mb-4">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2"
+                 style="background:linear-gradient(135deg,#1a1a2e,#16213e); color:#fff;">
+              <span class="fw-bold">
+                <i class="bi bi-calendar-check text-warning me-2"></i>
+                Séances {{ year }}
+              </span>
+              {% if user.is_authenticated %}
               <a href="{% url 'member_dashboard' %}" class="btn btn-sm btn-outline-light rounded-pill px-3">Mon Dashboard</a>
-            {% endif %}
-          </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-secondary">
-                  <tr>
-                    <th class="ps-4">Titre de la Réunion</th>
-                    <th>Date de tenue</th>
-                    <th class="text-center">Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for seance in seances %}
-                  <tr>
-                    <td class="ps-4 fw-bold text-dark">
-                      <i class="bi bi-calendar3 me-2 text-primary"></i>{{ seance.title }}
-                    </td>
-                    <td><span class="badge bg-primary px-3 py-2 rounded-pill"><i class="bi bi-clock me-1"></i>{{ seance.date|date:"d/m/Y" }}</span></td>
-                    <td class="text-center">
-                      <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i>Session Enregistrée</span>
-                    </td>
-                  </tr>
-                  {% empty %}
-                  <tr>
-                    <td colspan="3" class="text-center py-4 text-muted">
-                      <i class="bi bi-calendar-x fs-2 d-block mb-1"></i>Aucune réunion enregistrée pour le moment.
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+              {% endif %}
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-4">Titre de la Réunion</th>
+                      <th>Date</th>
+                      <th class="text-center">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for s_year, s_list in seances_by_year.items %}
+                    {% if s_year == year %}
+                      {% for seance in s_list %}
+                      <tr>
+                        <td class="ps-4 fw-semibold text-dark">
+                          <i class="bi bi-calendar3 me-2 text-primary"></i>{{ seance.title }}
+                        </td>
+                        <td>
+                          <span class="badge rounded-pill px-3 py-2" style="background:#0056b3;"><i class="bi bi-clock me-1"></i>{{ seance.date|date:"d/m/Y" }}</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="badge rounded-pill px-3 py-2 bg-success"><i class="bi bi-check-circle me-1"></i>Enregistrée</span>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                      {% if not s_list %}
+                      <tr><td colspan="3" class="text-center py-3 text-muted">Aucune séance pour {{ year }}</td></tr>
+                      {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+        {% endif %}
 
-    <!-- Cartes des Membres de la Réunion (Affichage Automatique après inscription) -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-      <h3 class="h4 fw-bold mb-0 text-dark">
-        <i class="bi bi-person-lines-fill me-2 text-success"></i>Membres Inscrits ({{ total_members }})
-      </h3>
-      {% if not user.is_authenticated %}
-        <a href="{% url 'register' %}" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
-          <i class="bi bi-person-plus me-1"></i>S'inscrire à la réunion
-        </a>
-      {% endif %}
-    </div>
+        <!-- Membres de cette année -->
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h4 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-people-fill me-2 text-success"></i>
+            Membres inscrits en {{ year }}
+            <span class="badge rounded-pill ms-2" style="background:linear-gradient(135deg,#198754,#20c997);font-size:.75rem;">{{ mlist|length }}</span>
+          </h4>
+          {% if not user.is_authenticated %}
+          <a href="{% url 'register' %}" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
+            <i class="bi bi-person-plus me-1"></i>S'inscrire
+          </a>
+          {% endif %}
+        </div>
 
-    <div class="row g-4">
-      {% for member_item in reunion_members %}
-      <div class="col-6 col-md-4 col-lg-3">
-        <a href="{% url 'public_member_detail' member_item.pk %}" class="text-decoration-none">
-          <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-3 hover-shadow transition bg-white">
-            <div class="position-relative d-inline-block mx-auto mb-3">
-              {% if member_item.profile_photo %}
-                <img src="{{ member_item.profile_photo.url }}" alt="{{ member_item.name }}"
-                     class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #198754;">
-              {% else %}
-                <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center fw-bold text-white mx-auto"
-                     style="width: 80px; height: 80px; background: linear-gradient(135deg, #198754, #20c997); font-size: 1.8rem;">
-                  {{ member_item.name.0|upper }}
+        <div class="row g-3">
+          {% for member_item in mlist %}
+          <div class="col-6 col-md-4 col-lg-3">
+            <a href="{% url 'public_member_detail' member_item.pk %}" class="text-decoration-none">
+              <div class="member-card card border-0 rounded-4 overflow-hidden h-100"
+                   style="box-shadow:0 4px 20px rgba(0,0,0,.07); transition:transform .2s, box-shadow .2s;">
+                <!-- Photo top banner -->
+                <div class="position-relative" style="height:90px; background:linear-gradient(135deg,#0056b3 0%,#198754 100%);">
+                  <div class="position-absolute" style="bottom:-36px; left:50%; transform:translateX(-50%);">
+                    {% if member_item.profile_photo %}
+                    <img src="{{ member_item.profile_photo.url }}" alt="{{ member_item.name }}"
+                         class="rounded-circle border border-3 border-white shadow"
+                         style="width:72px;height:72px;object-fit:cover;">
+                    {% else %}
+                    <div class="rounded-circle border border-3 border-white shadow d-flex align-items-center justify-content-center fw-bold text-white"
+                         style="width:72px;height:72px;background:linear-gradient(135deg,#0056b3,#198754);font-size:1.6rem;">
+                      {{ member_item.name.0|upper }}
+                    </div>
+                    {% endif %}
+                    {% if member_item.is_certified %}
+                    <span class="position-absolute bottom-0 end-0 badge rounded-circle bg-success p-1" title="Certifié" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;">
+                      <i class="bi bi-check-lg" style="font-size:.6rem;"></i>
+                    </span>
+                    {% endif %}
+                  </div>
                 </div>
-              {% endif %}
-              {% if member_item.is_certified %}
-                <span class="position-absolute bottom-0 end-0 badge bg-success rounded-circle p-1" title="Membre certifié">
-                  <i class="bi bi-check-lg text-white"></i>
-                </span>
-              {% endif %}
-            </div>
-            <h6 class="fw-bold mb-1 text-dark text-truncate">{{ member_item.name }}</h6>
-            <p class="small text-muted mb-2">
-              <span class="badge bg-light text-dark border rounded-pill px-2 py-1">
-                {{ member_item.get_role_display }}
-              </span>
-            </p>
-            {% if member_item.school_level %}
-              <p class="small text-secondary mb-0"><i class="bi bi-mortarboard me-1"></i>{{ member_item.get_school_level_display }}</p>
-            {% endif %}
+                <!-- Body -->
+                <div class="card-body text-center pt-5 pb-3 px-3">
+                  <h6 class="fw-bold text-dark mb-1 text-truncate" style="font-size:.9rem;">{{ member_item.name }}</h6>
+                  <span class="badge rounded-pill px-2 py-1 mb-2 d-inline-block"
+                        style="background:rgba(0,86,179,.1);color:#0056b3;font-size:.7rem;border:1px solid rgba(0,86,179,.2);">
+                    {{ member_item.get_role_display }}
+                  </span>
+                  {% if member_item.school_level %}
+                  <p class="small text-muted mb-0" style="font-size:.75rem;">
+                    <i class="bi bi-mortarboard me-1"></i>{{ member_item.get_school_level_display }}
+                  </p>
+                  {% endif %}
+                </div>
+              </div>
+            </a>
           </div>
-        </a>
-      </div>
-      {% empty %}
-      <div class="col-12 text-center py-4 text-muted bg-white rounded-4 shadow-sm">
-        <i class="bi bi-people fs-1 d-block mb-2"></i>Aucun membre inscrit.
-      </div>
+          {% empty %}
+          <div class="col-12 text-center py-4 text-muted">
+            <i class="bi bi-people fs-2 d-block mb-2"></i>Aucun membre inscrit en {{ year }}.
+          </div>
+          {% endfor %}
+        </div>
+
+      </div><!-- /tab-pane -->
       {% endfor %}
+    </div><!-- /tab-content -->
+
+    {% else %}
+    <!-- fallback if no data -->
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-people fs-1 d-block mb-2"></i>Aucun membre enregistré pour le moment.
     </div>
+    {% endif %}
 
   </div>
 </section>
+
 
 <!-- About Section -->
 <section id="apropos" class="py-5 bg-white border-bottom">
@@ -288,85 +344,178 @@
 <!-- Events Section -->
 <section id="events" class="py-5 bg-white border-bottom">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-      <div>
-        <h2 class="fw-bold mb-0">Événements à Venir & Activités</h2>
-        <p class="text-muted mb-0 small">Rejoignez-nous lors des prochains événements de l'association</p>
-      </div>
-      <a href="{% url 'public_events' %}" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
-        Tous les événements <i class="bi bi-arrow-right ms-1"></i>
-      </a>
-    </div>
-    <div class="row g-4">
-      {% for event in events %}
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-          {% if event.image %}
-          <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
-          {% else %}
-          <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-            <i class="bi bi-calendar-event display-4 text-primary opacity-50"></i>
-          </div>
-          {% endif %}
-          <div class="card-body p-4 d-flex flex-column">
-            <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1 mb-2 align-self-start small">
-              <i class="bi bi-clock me-1"></i>{{ event.event_date|date:"d/m/Y H:i" }}
-            </span>
-            <h5 class="card-title fw-bold text-dark mb-2">{{ event.title }}</h5>
-            {% if event.location %}
-            <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ event.location }}</p>
-            {% endif %}
-            <p class="card-text text-muted small flex-grow-1">{{ event.description|truncatechars:90 }}</p>
-            <a href="{% url 'public_event_detail' event.pk %}" class="btn btn-sm btn-outline-primary rounded-pill mt-3 align-self-start fw-semibold">
-              Détails <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-          </div>
+    {% if user.is_authenticated %}
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h2 class="fw-bold mb-0">Événements à Venir & Activités</h2>
+          <p class="text-muted mb-0 small">Rejoignez-nous lors des prochains événements de l'association</p>
         </div>
+        <a href="{% url 'public_events' %}" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
+          Tous les événements <i class="bi bi-arrow-right ms-1"></i>
+        </a>
       </div>
-      {% empty %}
-      <div class="col-12 text-center text-muted py-4">Aucun événement à venir pour le moment.</div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<!-- News Section -->
-<section id="news" class="py-5 bg-light border-bottom">
-  <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-      <div>
-        <h2 class="fw-bold mb-0">Dernières Actualités</h2>
-        <p class="text-muted mb-0 small">Découvrez les nouvelles et annonces de l'association</p>
-      </div>
-      <a href="{% url 'news_list' %}" class="btn btn-outline-primary rounded-pill px-3">
-        Toutes les actualités <i class="bi bi-arrow-right ms-1"></i>
-      </a>
-    </div>
-    <div class="row g-4">
-      {% for item in news %}
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-shadow transition">
-          {% if item.image %}
-          <a href="{% url 'news_detail' item.pk %}">
-            <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
-          </a>
-          {% endif %}
-          <div class="card-body p-4 d-flex flex-column">
-            <h5 class="card-title fw-bold text-dark mb-2">
-              <a href="{% url 'news_detail' item.pk %}" class="text-decoration-none text-dark hover-primary">{{ item.title }}</a>
-            </h5>
-            <p class="card-text text-muted small flex-grow-1">{{ item.content|truncatechars:100 }}</p>
-            <div class="pt-3 border-top d-flex justify-content-between align-items-center mt-auto">
-              <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}</small>
-              <a href="{% url 'news_detail' item.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
-                Lire la suite <i class="bi bi-arrow-right ms-1"></i>
+      <div class="row g-4">
+        {% for event in events %}
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+            {% if event.image %}
+            <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+              <i class="bi bi-calendar-event display-4 text-primary opacity-50"></i>
+            </div>
+            {% endif %}
+            <div class="card-body p-4 d-flex flex-column">
+              <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1 mb-2 align-self-start small">
+                <i class="bi bi-clock me-1"></i>{{ event.event_date|date:"d/m/Y H:i" }}
+              </span>
+              <h5 class="card-title fw-bold text-dark mb-2">{{ event.title }}</h5>
+              {% if event.location %}
+              <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ event.location }}</p>
+              {% endif %}
+              <p class="card-text text-muted small flex-grow-1">{{ event.description|truncatechars:90 }}</p>
+              <a href="{% url 'public_event_detail' event.pk %}" class="btn btn-sm btn-outline-primary rounded-pill mt-3 align-self-start fw-semibold">
+                Détails <i class="bi bi-arrow-right ms-1"></i>
               </a>
             </div>
           </div>
         </div>
+        {% empty %}
+        <div class="col-12 text-center text-muted py-4">Aucun événement à venir pour le moment.</div>
+        {% endfor %}
       </div>
+    {% else %}
+      <div class="text-center mb-4">
+        <h2 class="fw-bold mb-0">Événements à Venir & Activités</h2>
+        <p class="text-muted mb-0 small">Découvrez les prochaines activités de notre communauté</p>
+      </div>
+      <div class="card border-0 shadow-lg rounded-4 p-5 text-center bg-light position-relative overflow-hidden" style="border-top: 4px solid var(--primary-blue) !important;">
+        <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: radial-gradient(circle, var(--primary-blue) 10%, transparent 11%); background-size: 12px 12px;"></div>
+        <div class="position-relative z-1">
+          <i class="bi bi-lock-fill display-4 text-primary mb-3"></i>
+          <h4 class="fw-bold text-dark mb-2">Contenu réservé aux membres connectés</h4>
+          <p class="text-muted mx-auto mb-4 col-md-8">
+            Pour des raisons de confidentialité et de sécurité de l'association, la liste détaillée des événements et activités est exclusivement accessible aux membres de la JESFOD.
+          </p>
+          <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4 fw-bold">Se connecter</a>
+            <a href="{% url 'register' %}" class="btn btn-outline-primary rounded-pill px-4">S'inscrire</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- News Section - Premium Design -->
+<section id="news" class="py-5 border-bottom" style="background:#f8faff;">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+      <div>
+        <span class="badge rounded-pill px-3 py-2 fw-bold text-uppercase mb-2 d-block d-sm-inline-block"
+              style="background:linear-gradient(135deg,#0056b3,#0096ff);color:#fff;letter-spacing:.06em;">Actualités</span>
+        <h2 class="fw-bold mb-0">Dernières Nouvelles</h2>
+        <p class="text-muted mb-0 small mt-1">Découvrez les annonces et activités de l'association</p>
+      </div>
+      <a href="{% url 'news_list' %}" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm">
+        Toutes les actualités <i class="bi bi-arrow-right ms-2"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for item in news %}
+      {% if forloop.first %}
+      <!-- Featured / Hero card -->
+      <div class="col-12 col-md-6 col-lg-7">
+        <a href="{% url 'news_detail' item.pk %}" class="text-decoration-none">
+          <div class="card border-0 rounded-4 overflow-hidden h-100 position-relative"
+               style="min-height:340px;box-shadow:0 8px 32px rgba(0,86,179,.13);">
+            {% if item.image %}
+            <img src="{{ item.image.url }}" alt="{{ item.title }}"
+                 style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;">
+            {% else %}
+            <div style="width:100%;height:100%;position:absolute;top:0;left:0;background:linear-gradient(135deg,#0056b3,#198754);"></div>
+            {% endif %}
+            <!-- Gradient overlay -->
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.2) 60%,transparent 100%);"></div>
+            <!-- Content -->
+            <div class="position-relative p-4 mt-auto d-flex flex-column justify-content-end" style="min-height:340px;">
+              <span class="badge rounded-pill mb-2 align-self-start" style="background:rgba(255,199,0,.9);color:#1a1a1a;font-size:.75rem;">
+                <i class="bi bi-star-fill me-1"></i>À la Une
+              </span>
+              <h4 class="fw-bold text-white mb-2">{{ item.title }}</h4>
+              <p class="text-white-50 small mb-3">{{ item.content|truncatechars:120 }}</p>
+              <div class="d-flex align-items-center justify-content-between">
+                <small class="text-white-50"><i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}</small>
+                <span class="btn btn-sm btn-warning rounded-pill px-3 fw-bold">Lire <i class="bi bi-arrow-right ms-1"></i></span>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+      <!-- Right column for items 2 & 3 -->
+      <div class="col-12 col-md-6 col-lg-5 d-flex flex-column gap-4">
+      {% elif forloop.counter == 2 or forloop.counter == 3 %}
+        <a href="{% url 'news_detail' item.pk %}" class="text-decoration-none flex-grow-1">
+          <div class="card border-0 rounded-4 overflow-hidden h-100 d-flex flex-row align-items-stretch"
+               style="box-shadow:0 4px 18px rgba(0,0,0,.07); min-height:140px; transition:transform .2s,box-shadow .2s;"
+               onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,.12)';"
+               onmouseleave="this.style.transform='';this.style.boxShadow='';"
+          >
+            {% if item.image %}
+            <img src="{{ item.image.url }}" alt="{{ item.title }}"
+                 style="width:120px;min-height:100%;object-fit:cover;flex-shrink:0;">
+            {% else %}
+            <div style="width:100px;background:linear-gradient(135deg,#0056b3,#198754);flex-shrink:0;"></div>
+            {% endif %}
+            <div class="card-body p-3 d-flex flex-column justify-content-between">
+              <div>
+                <h6 class="fw-bold text-dark mb-1" style="line-height:1.3;">{{ item.title }}</h6>
+                <p class="text-muted small mb-0" style="font-size:.78rem;">{{ item.content|truncatechars:70 }}</p>
+              </div>
+              <small class="text-muted mt-2 d-block" style="font-size:.72rem;">
+                <i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}
+              </small>
+            </div>
+          </div>
+        </a>
+        {% if forloop.counter == 3 %}</div>{% endif %}
+      {% else %}
+      <!-- Remaining cards in standard grid -->
+      <div class="col-12 col-md-4">
+        <a href="{% url 'news_detail' item.pk %}" class="text-decoration-none">
+          <div class="card border-0 rounded-4 overflow-hidden h-100"
+               style="box-shadow:0 4px 18px rgba(0,0,0,.07); transition:transform .2s,box-shadow .2s;"
+               onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.12)';"
+               onmouseleave="this.style.transform='';this.style.boxShadow='';">
+            {% if item.image %}
+            <div class="position-relative overflow-hidden" style="height:180px;">
+              <img src="{{ item.image.url }}" alt="{{ item.title }}"
+                   style="width:100%;height:100%;object-fit:cover;transition:transform .4s;"
+                   onmouseenter="this.style.transform='scale(1.06)';" onmouseleave="this.style.transform='';">
+              <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5),transparent 60%);"></div>
+            </div>
+            {% else %}
+            <div style="height:180px;background:linear-gradient(135deg,#0056b3,#198754);display:flex;align-items:center;justify-content:center;">
+              <i class="bi bi-newspaper text-white opacity-50" style="font-size:3rem;"></i>
+            </div>
+            {% endif %}
+            <div class="card-body p-3">
+              <h6 class="fw-bold text-dark mb-1">{{ item.title }}</h6>
+              <p class="text-muted small mb-3" style="font-size:.8rem;">{{ item.content|truncatechars:80 }}</p>
+              <div class="d-flex align-items-center justify-content-between">
+                <small class="text-muted" style="font-size:.72rem;"><i class="bi bi-clock me-1"></i>{{ item.created_date|date:"d M Y" }}</small>
+                <span style="color:#0056b3;font-size:.78rem;font-weight:600;">Lire <i class="bi bi-arrow-right"></i></span>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endif %}
       {% empty %}
-      <div class="col-12 text-center text-muted py-4">Aucune actualité disponible pour le moment.</div>
+      <div class="col-12 text-center text-muted py-5">
+        <i class="bi bi-newspaper fs-1 d-block mb-2"></i>Aucune actualité disponible pour le moment.
+      </div>
       {% endfor %}
     </div>
   </div>
@@ -375,68 +524,89 @@
 <!-- Galerie Section -->
 <section id="galerie" class="py-5 bg-white border-bottom">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-      <div>
+    {% if user.is_authenticated %}
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h2 class="fw-bold mb-0">Galerie Photos</h2>
+          <p class="text-muted mb-0 small">Aperçu des récents événements et activités en images</p>
+        </div>
+        <a href="{% url 'public_gallery' %}" class="btn btn-outline-info rounded-pill px-3 fw-semibold">
+          Toutes les photos <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+      <div class="row g-4">
+        {% for item in galleries %}
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-shadow transition bg-white">
+            {% if item.image %}
+            <div class="position-relative overflow-hidden">
+              <a href="#" data-bs-toggle="modal" data-bs-target="#homeGalleryModal{{ item.pk }}">
+                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
+              </a>
+              <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-sm btn-light rounded-pill px-3 py-1" data-bs-toggle="modal" data-bs-target="#homeGalleryModal{{ item.pk }}">
+                  <i class="bi bi-arrows-angle-expand me-1"></i>Ouvrir
+                </button>
+                <a href="{% url 'download_photo' item.pk %}" class="btn btn-sm btn-warning rounded-pill px-3 py-1 fw-bold">
+                  <i class="bi bi-download me-1"></i>Télécharger
+                </a>
+              </div>
+            </div>
+            {% endif %}
+            <div class="card-body">
+              <h6 class="fw-bold mb-1">{{ item.title }}</h6>
+              <p class="small text-muted mb-0">{{ item.description|truncatechars:80 }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lightbox Modal for Homepage Gallery Item -->
+        {% if item.image %}
+        <div class="modal fade" id="homeGalleryModal{{ item.pk }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 overflow-hidden">
+              <div class="modal-header border-0 bg-dark text-white">
+                <h5 class="modal-title fw-bold">{{ item.title }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body p-0 text-center bg-dark">
+                <img src="{{ item.image.url }}" alt="{{ item.title }}" class="img-fluid" style="max-height: 80vh; object-fit: contain;">
+              </div>
+              <div class="modal-footer border-0 bg-dark text-white d-flex justify-content-between">
+                <span class="small text-white-50">{{ item.description|default:"" }}</span>
+                <a href="{% url 'download_photo' item.pk %}" class="btn btn-warning rounded-pill px-4 fw-bold">
+                  <i class="bi bi-download me-1"></i>Télécharger la photo
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% empty %}
+        <div class="col-12 text-center text-muted py-3">Aucune photo dans la galerie.</div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center mb-4">
         <h2 class="fw-bold mb-0">Galerie Photos</h2>
-        <p class="text-muted mb-0 small">Aperçu des récents événements et activités en images</p>
+        <p class="text-muted mb-0 small">Les moments forts de la JESFOD en images</p>
       </div>
-      <a href="{% url 'public_gallery' %}" class="btn btn-outline-info rounded-pill px-3 fw-semibold">
-        Toutes les photos <i class="bi bi-arrow-right ms-1"></i>
-      </a>
-    </div>
-    <div class="row g-4">
-      {% for item in galleries %}
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-shadow transition bg-white">
-          {% if item.image %}
-          <div class="position-relative overflow-hidden">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#homeGalleryModal{{ item.pk }}">
-              <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
-            </a>
-            <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 d-flex justify-content-between align-items-center">
-              <button type="button" class="btn btn-sm btn-light rounded-pill px-3 py-1" data-bs-toggle="modal" data-bs-target="#homeGalleryModal{{ item.pk }}">
-                <i class="bi bi-arrows-angle-expand me-1"></i>Ouvrir
-              </button>
-              <a href="{% url 'download_photo' item.pk %}" class="btn btn-sm btn-warning rounded-pill px-3 py-1 fw-bold">
-                <i class="bi bi-download me-1"></i>Télécharger
-              </a>
-            </div>
-          </div>
-          {% endif %}
-          <div class="card-body">
-            <h6 class="fw-bold mb-1">{{ item.title }}</h6>
-            <p class="small text-muted mb-0">{{ item.description|truncatechars:80 }}</p>
+      <div class="card border-0 shadow-lg rounded-4 p-5 text-center bg-light position-relative overflow-hidden" style="border-top: 4px solid var(--primary-green) !important;">
+        <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: radial-gradient(circle, var(--primary-green) 10%, transparent 11%); background-size: 12px 12px;"></div>
+        <div class="position-relative z-1">
+          <i class="bi bi-images display-4 text-success mb-3"></i>
+          <h4 class="fw-bold text-dark mb-2">Galerie réservée aux membres</h4>
+          <p class="text-muted mx-auto mb-4 col-md-8">
+            Rejoignez-nous pour accéder à l'album photo de nos réunions, célébrations et activités communautaires de Fonakeukeu.
+          </p>
+          <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'login' %}" class="btn btn-success rounded-pill px-4 fw-bold">Se connecter</a>
+            <a href="{% url 'register' %}" class="btn btn-outline-success rounded-pill px-4">S'inscrire</a>
           </div>
         </div>
       </div>
-
-      <!-- Lightbox Modal for Homepage Gallery Item -->
-      {% if item.image %}
-      <div class="modal fade" id="homeGalleryModal{{ item.pk }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-          <div class="modal-content rounded-4 border-0 overflow-hidden">
-            <div class="modal-header border-0 bg-dark text-white">
-              <h5 class="modal-title fw-bold">{{ item.title }}</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0 text-center bg-dark">
-              <img src="{{ item.image.url }}" alt="{{ item.title }}" class="img-fluid" style="max-height: 80vh; object-fit: contain;">
-            </div>
-            <div class="modal-footer border-0 bg-dark text-white d-flex justify-content-between">
-              <span class="small text-white-50">{{ item.description|default:"" }}</span>
-              <a href="{% url 'download_photo' item.pk %}" class="btn btn-warning rounded-pill px-4 fw-bold">
-                <i class="bi bi-download me-1"></i>Télécharger la photo
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      {% empty %}
-      <div class="col-12 text-center text-muted py-3">Aucune photo dans la galerie.</div>
-      {% endfor %}
-    </div>
+    {% endif %}
   </div>
 </section>
 

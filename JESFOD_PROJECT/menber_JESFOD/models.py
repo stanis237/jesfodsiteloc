@@ -7,6 +7,7 @@ class News(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     image = models.ImageField(upload_to="news/", blank=True)
+    video = models.FileField(upload_to="videos/", blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='member_news')
     created_date = models.DateTimeField(auto_now_add=True)
     is_published = models.BooleanField(default=True)
@@ -24,6 +25,7 @@ class Event(models.Model):
     location = models.CharField(max_length=200, blank=True)
     event_date = models.DateTimeField()
     image = models.ImageField(upload_to='events/', blank=True)
+    video = models.FileField(upload_to="videos/", blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_events')
     created_date = models.DateTimeField(auto_now_add=True)
     is_published = models.BooleanField(default=True)
@@ -44,10 +46,16 @@ class Member(models.Model):
         ('president', 'Président(e)'),
         ('vice_president', 'Vice-Président(e)'),
         ('secretaire_general', 'Secrétaire Général(e)'),
-        ('secretaire_adjoint', 'Secrétaire Adjoint(e)'),
+        ('secretaire_adjoint', 'Vice-Secrétaire'),
+        ('censeur', 'Censeur'),
+        ('charge_culturel', 'Chargé(e) des Affaires Culturelles'),
+        ('charge_com', 'Chargé(e) de Communication'),
+        ('charge_animation', 'Chargé(e) Animation'),
         ('tresorier', 'Trésorier(e)'),
         ('tresorier_adjoint', 'Trésorier(e) Adjoint(e)'),
-        ('charge_com', 'Chargé(e) de Communication'),
+        ('commissaire_comptes', 'Commissaire aux Comptes'),
+        ('charge_sport', 'Chargé(e) des Sports'),
+        ('sante', 'Chargé(e) de la Santé'),
         ('conseiller', 'Conseiller(e)'),
         ('membre', 'Membre du Bureau'),
         ('membre_reunion', 'Membre de Réunion'),
@@ -75,11 +83,35 @@ class Member(models.Model):
     activities = models.TextField(blank=True, help_text="Activités et responsabilités du membre")
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.get_position_display()})" if self.position else self.name
 
     @property
     def is_bureau(self):
         return self.role == 'bureau'
+
+    @property
+    def is_president_or_vp(self):
+        return self.role == 'bureau' and self.position in ('president', 'vice_president')
+
+    @property
+    def is_tresorier_access(self):
+        return self.role == 'bureau' and self.position in ('president', 'vice_president', 'tresorier', 'tresorier_adjoint', 'commissaire_comptes')
+
+    @property
+    def is_secretaire_access(self):
+        return self.role == 'bureau' and self.position in ('president', 'vice_president', 'secretaire_general', 'secretaire_adjoint')
+
+    @property
+    def is_censeur_access(self):
+        return self.role == 'bureau' and self.position in ('president', 'vice_president', 'censeur')
+
+    @property
+    def is_com_culture_access(self):
+        return self.role == 'bureau' and self.position in ('president', 'vice_president', 'charge_com', 'charge_culturel', 'charge_animation', 'charge_sport', 'sante')
+
+    @property
+    def is_conseiller_access(self):
+        return self.role == 'bureau' and self.position in ('president', 'vice_president', 'conseiller')
 
     @property
     def inscription_paid(self):
@@ -187,4 +219,19 @@ class Absence(models.Model):
 
     def __str__(self):
         return f"Absence de {self.member.name} - {self.seance}"
+
+
+class Presence(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='presences')
+    seance = models.ForeignKey(Seance, on_delete=models.CASCADE, related_name='presences')
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        unique_together = ('member', 'seance')
+
+    def __str__(self):
+        return f"Présence de {self.member.name} à {self.seance}"
 

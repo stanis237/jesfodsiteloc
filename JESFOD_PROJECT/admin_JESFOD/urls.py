@@ -5,7 +5,8 @@ urlpatterns = [
     # Dashboard
     path('', views.admin_dashboard, name='admin_dashboard'),
 
-    # Members
+    # Members & Bureau Setup
+    path('bureau/setup/', views.bureau_setup, name='bureau_setup'),
     path('members/', views.MemberListView.as_view(), name='member_list'),
     path('members/create/', views.MemberCreateView.as_view(), name='member_create'),
     path('members/<int:pk>/update/', views.MemberUpdateView.as_view(), name='member_update'),

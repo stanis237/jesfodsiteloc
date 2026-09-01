@@ -7,9 +7,13 @@
 {% block og_description %}Rejoignez la communauté JESFOD Douala.{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section id="accueil" class="hero-section text-white position-relative py-5 overflow-hidden" style="background: linear-gradient(135deg, rgba(0,86,179,0.9), rgba(25,135,84,0.85)), url('{% static 'images/cp4.jpg' %}') center/cover no-repeat; min-height: 75vh; display: flex; align-items: center;">
-  <div class="container text-center py-4">
+<!-- Hero Section with Video Background -->
+<section id="accueil" class="hero-video-section">
+  <video class="hero-video-bg" autoplay muted loop playsinline>
+    <source src="{% static 'video/video.mp4' %}" type="video/mp4">
+  </video>
+  <div class="hero-video-overlay"></div>
+  <div class="container hero-video-content py-4">
     <div class="row justify-content-center">
       <div class="col-lg-9 animate__animated animate__fadeInUp">
         <h1 class="display-4 fw-black text-white mb-3">Bienvenue à <span class="text-warning">JESFOD</span></h1>
@@ -64,7 +68,7 @@
       <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-warning text-dark h-100">
           <i class="bi bi-newspaper fs-1 mb-1"></i>
-          <div class="fs-2 fw-bold">{{ total_news|default:news|length }}</div>
+          <div class="fs-2 fw-bold">{{ total_news|default:0 }}</div>
           <div class="small text-dark-50 text-uppercase fw-bold">Actualités</div>
         </div>
       </div>

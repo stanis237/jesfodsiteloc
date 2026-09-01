@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Création des Accès du Bureau - JESFOD{% endblock %}
+{% block content %}
+<div class="container mt-4 py-4">
+  <!-- Header & Navigation -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold mb-1"><i class="bi bi-shield-lock-fill text-primary me-2"></i>Gestion & Création des Accès du Bureau</h2>
+      <p class="text-muted mb-0">Configuration et initialisation des comptes d'accès pour les membres du nouveau bureau</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'member_list' %}" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
+        <i class="bi bi-people me-1"></i>Liste des Membres
+      </a>
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-3 fw-semibold">
+        <i class="bi bi-arrow-left me-1"></i>Tableau de bord
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Action Box -->
+  <div class="card border-0 shadow rounded-4 mb-4 bg-gradient text-white" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+    <div class="card-body p-4">
+      <div class="row align-items-center">
+        <div class="col-lg-8 mb-3 mb-lg-0">
+          <h4 class="fw-bold mb-2"><i class="bi bi-magic me-2"></i>Génération Automatique des Accès du Bureau</h4>
+          <p class="mb-0 text-white-50">
+            Cette action va créer ou mettre à jour automatiquement les 16 comptes Utilisateurs et Profils Membres du Bureau
+            selon la nomination officielle. Un mot de passe temporaire sera attribué à chacun.
+          </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <form method="post" class="d-flex flex-column gap-2">
+            {% csrf_token %}
+            <div class="input-group">
+              <span class="input-group-text bg-white border-0 text-primary fw-bold"><i class="bi bi-key"></i></span>
+              <input type="text" name="default_password" class="form-control border-0" value="Jesfod2026!" placeholder="Mot de passe temporaire" required>
+            </div>
+            <button type="submit" name="generate_all" class="btn btn-warning rounded-pill fw-bold text-dark px-4 shadow-sm">
+              <i class="bi bi-cpu-fill me-2"></i>Générer Tous Les Accès
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generated Credentials Report (if generated) -->
+  {% if generated_credentials %}
+  <div class="card border-0 shadow rounded-4 mb-4 border-start border-4 border-success">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0 text-success"><i class="bi bi-check-circle-fill me-2"></i>Comptes Générés / Réinitialisés</h5>
+      <button onclick="window.print()" class="btn btn-sm btn-outline-secondary rounded-pill">
+        <i class="bi bi-printer me-1"></i>Imprimer la liste des accès
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th class="ps-4">Membre du Bureau</th>
+              <th>Poste Affecté</th>
+              <th>Identifiant (Username)</th>
+              <th>Mot de Passe Temporaire</th>
+              <th class="text-center">Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in generated_credentials %}
+            <tr>
+              <td class="ps-4 fw-bold text-dark">{{ item.name }}</td>
+              <td><span class="badge bg-primary rounded-pill px-3 py-1">{{ item.position_display }}</span></td>
+              <td><code class="fs-6 fw-bold text-dark bg-light px-2 py-1 rounded border">{{ item.username }}</code></td>
+              <td><code class="fs-6 fw-bold text-danger bg-light px-2 py-1 rounded border">{{ item.password }}</code></td>
+              <td class="text-center">
+                <span class="badge bg-success rounded-pill px-3 py-1"><i class="bi bi-check-lg me-1"></i>{{ item.status }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Official Nominations List Table -->
+  <div class="card border-0 shadow rounded-4 overflow-hidden">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-stars me-2 text-primary"></i>Nomination Officielle des Membres du Bureau</h5>
+        <small class="text-muted">Statut actuel d'enregistrement dans la base de données</small>
+      </div>
+      <span class="badge bg-info text-dark rounded-pill px-3 py-2 fs-6">Total : 16 Membres</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">#</th>
+              <th>Nom & Prénom</th>
+              <th>Poste Assigné</th>
+              <th>Identifiant Recommandé</th>
+              <th class="text-center">Compte Présent</th>
+              <th class="text-end pe-4">Profil</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in nomination_status %}
+            <tr>
+              <td class="ps-4 fw-bold text-muted">{{ forloop.counter }}</td>
+              <td class="fw-bold text-dark">{{ item.name }}</td>
+              <td><span class="badge bg-dark rounded-pill px-3 py-1">{{ item.label }}</span></td>
+              <td><code class="text-primary">{{ item.username }}</code></td>
+              <td class="text-center">
+                {% if item.exists %}
+                  <span class="badge bg-success rounded-pill px-3 py-1"><i class="bi bi-check-circle me-1"></i>Actif</span>
+                {% else %}
+                  <span class="badge bg-secondary rounded-pill px-3 py-1"><i class="bi bi-hourglass me-1"></i>Non créé</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                {% if item.member %}
+                  <a href="{% url 'member_update' item.member.pk %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                    <i class="bi bi-pencil me-1"></i>Modifier
+                  </a>
+                {% else %}
+                  <span class="text-muted fs-7">À générer</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 d-flex justify-content-between align-items-center">
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">
+      <i class="bi bi-arrow-left me-2"></i>Retour au tableau de bord
+    </a>
+  </div>
+</div>
+{% endblock %}

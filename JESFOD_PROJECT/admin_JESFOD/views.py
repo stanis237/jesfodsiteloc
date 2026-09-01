@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.db.models import Sum
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
+from django.utils.decorators import method_decorator
 from menber_JESFOD.models import Member, News, Event, FinanceEntry
 from .models import Gallery
 from .forms import NewsForm, GalleryForm, EventForm, FinanceEntryForm, AdminMemberForm
@@ -21,17 +22,45 @@ def is_bureau(user):
     except Member.DoesNotExist:
         return False
 
-def is_tresorier(user):
+def is_president(user):
+    """Président ou Vice-Président : accès total."""
     try:
-        member = Member.objects.get(user=user)
-        return member.is_bureau
+        return Member.objects.get(user=user).is_president_or_vp
+    except Member.DoesNotExist:
+        return False
+
+def is_tresorier(user):
+    """Trésorier, Trésorier adjoint, ou Président : accès finances."""
+    try:
+        return Member.objects.get(user=user).is_tresorier_access
     except Member.DoesNotExist:
         return False
 
 def is_secretaire(user):
+    """Secrétaire, Secrétaire adjoint, ou Président : accès séances/news/absences."""
     try:
-        member = Member.objects.get(user=user)
-        return member.is_bureau
+        return Member.objects.get(user=user).is_secretaire_access
+    except Member.DoesNotExist:
+        return False
+
+def is_censeur(user):
+    """Censeurs, Président : accès discipline/absences/amendes."""
+    try:
+        return Member.objects.get(user=user).is_censeur_access
+    except Member.DoesNotExist:
+        return False
+
+def is_com_culture(user):
+    """Chargés Com/Culture/Animation/Sport/Santé, Président : accès évènements/médias."""
+    try:
+        return Member.objects.get(user=user).is_com_culture_access
+    except Member.DoesNotExist:
+        return False
+
+def is_conseiller(user):
+    """Conseiller, Président : accès aux rapports et conseils."""
+    try:
+        return Member.objects.get(user=user).is_conseiller_access
     except Member.DoesNotExist:
         return False
 
@@ -39,7 +68,129 @@ def is_secretaire(user):
 bureau_required = user_passes_test(is_bureau)
 tresorier_required = user_passes_test(is_tresorier)
 secretaire_required = user_passes_test(is_secretaire)
+president_required = user_passes_test(is_president)
+censeur_required = user_passes_test(is_censeur)
+com_culture_required = user_passes_test(is_com_culture)
+conseiller_required = user_passes_test(is_conseiller)
 
+
+BUREAU_NOMINATIONS = [
+    {"name": "MALIMETA PRINCESSE", "position": "president", "label": "Présidence"},
+    {"name": "ANAFACK ANYL", "position": "vice_president", "label": "Vice-Présidence"},
+    {"name": "DONFACK LEONEL", "position": "secretaire_general", "label": "Secrétaire Général(e)"},
+    {"name": "KEMGMO ANGE", "position": "secretaire_adjoint", "label": "Vice-Secrétaire"},
+    {"name": "DJOUFACK ARMEL", "position": "censeur", "label": "Censeur"},
+    {"name": "MOMO RICH", "position": "censeur", "label": "Censeur"},
+    {"name": "TADONKENG MARLENE", "position": "charge_culturel", "label": "Chargée des Affaires Culturelles"},
+    {"name": "MIAFO STANIS", "position": "charge_culturel", "label": "Chargé des Affaires Culturelles"},
+    {"name": "SONGMO DILANE", "position": "charge_com", "label": "Chargé(e) de Communication"},
+    {"name": "NGAMENI RAISSA", "position": "charge_animation", "label": "Chargée Animation"},
+    {"name": "DONFACK MYLENE", "position": "charge_animation", "label": "Chargée Animation"},
+    {"name": "GUEMENA VANEL", "position": "tresorier", "label": "Trésorier(e)"},
+    {"name": "DONFACK BELVIANE", "position": "commissaire_comptes", "label": "Commissaire aux Comptes"},
+    {"name": "TSAFACK LAMINE", "position": "charge_sport", "label": "Chargé(e) des Sports"},
+    {"name": "TSAFACK EVRAD", "position": "charge_sport", "label": "Chargé(e) des Sports"},
+    {"name": "KEMGMO LOGANE", "position": "sante", "label": "Chargée de la Santé"},
+    {"name": "TAGEUFOUET STEPHANE", "position": "conseiller", "label": "Conseiller(e)"},
+]
+
+
+@login_required
+@bureau_required
+def bureau_setup(request):
+    """Vue d'administration pour créer et initialiser les comptes d'accès du bureau."""
+    import re
+    from django.contrib.auth.models import User
+
+    generated_credentials = []
+
+    if request.method == 'POST' and 'generate_all' in request.POST:
+        default_password = request.POST.get('default_password', 'Jesfod2026!').strip() or 'Jesfod2026!'
+        
+        for nomino in BUREAU_NOMINATIONS:
+            name = nomino['name']
+            position = nomino['position']
+            label = nomino['label']
+
+            parts = name.lower().split()
+            username = ".".join(parts)
+            username = re.sub(r'[^\w.@+-]', '', username)[:140]
+
+            user, u_created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': f"{username}@jesfod.org",
+                    'first_name': parts[1].capitalize() if len(parts) > 1 else parts[0].capitalize(),
+                    'last_name': parts[0].upper()
+                }
+            )
+            
+            user.set_password(default_password)
+            user.save()
+
+            member, m_created = Member.objects.get_or_create(
+                user=user,
+                defaults={
+                    'name': name,
+                    'email': user.email,
+                    'role': 'bureau',
+                    'position': position,
+                    'is_certified': True,
+                    'certification_date': timezone.now()
+                }
+            )
+
+            member.name = name
+            member.role = 'bureau'
+            member.position = position
+            member.is_certified = True
+            if not member.certification_date:
+                member.certification_date = timezone.now()
+            member.save()
+
+            FinanceEntry.objects.get_or_create(
+                member=member,
+                type='inscription',
+                defaults={'amount': 500, 'is_paid': False}
+            )
+
+            generated_credentials.append({
+                'name': name,
+                'position_display': label,
+                'username': username,
+                'password': default_password,
+                'status': 'Créé' if u_created else 'Mis à jour'
+            })
+
+        messages.success(request, f"✓ Accès configurés et générés avec succès pour les {len(generated_credentials)} membres du bureau !")
+
+    nomination_status = []
+    from django.contrib.auth.models import User
+    for nomino in BUREAU_NOMINATIONS:
+        name = nomino['name']
+        position = nomino['position']
+        label = nomino['label']
+        parts = name.lower().split()
+        username = ".".join(parts)
+        username = re.sub(r'[^\w.@+-]', '', username)[:140]
+
+        existing_user = User.objects.filter(username=username).first()
+        existing_member = Member.objects.filter(name__iexact=name).first() or (Member.objects.filter(user=existing_user).first() if existing_user else None)
+
+        nomination_status.append({
+            'name': name,
+            'position': position,
+            'label': label,
+            'username': username,
+            'exists': bool(existing_user or existing_member),
+            'member': existing_member
+        })
+
+    return render(request, 'admin_JESFOD/bureau_setup.html', {
+        'nomination_status': nomination_status,
+        'generated_credentials': generated_credentials,
+        'is_admin_page': True,
+    })
 
 
 # ------------------------------------------------------------------ #
@@ -82,8 +233,12 @@ def admin_dashboard(request):
         'total_tontine': total_tontine,
         'members_pas_a_jour': members_pas_a_jour,
         'is_admin_page': True,
+        'is_president_role': is_president(request.user),
         'is_tresorier_role': is_tresorier(request.user),
         'is_secretaire_role': is_secretaire(request.user),
+        'is_censeur_role': is_censeur(request.user),
+        'is_com_culture_role': is_com_culture(request.user),
+        'is_conseiller_role': is_conseiller(request.user),
     }
     return render(request, 'admin_JESFOD/dashboard.html', context)
 
@@ -117,7 +272,13 @@ def certify_member(request, pk):
 # ------------------------------------------------------------------ #
 #  MEMBERS CRUD                                                       #
 # ------------------------------------------------------------------ #
-class MemberListView(ListView):
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+
+class BureauRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        return is_bureau(self.request.user)
+
+class MemberListView(BureauRequiredMixin, ListView):
     model = Member
     template_name = 'admin_JESFOD/member_list.html'
     context_object_name = 'members'
@@ -131,7 +292,7 @@ class MemberListView(ListView):
         return context
 
 
-class MemberCreateView(CreateView):
+class MemberCreateView(BureauRequiredMixin, CreateView):
     model = Member
     form_class = AdminMemberForm
     template_name = 'admin_JESFOD/member_form.html'
@@ -197,7 +358,7 @@ class MemberCreateView(CreateView):
         return redirect(self.success_url)
 
 
-class MemberUpdateView(UpdateView):
+class MemberUpdateView(BureauRequiredMixin, UpdateView):
     model = Member
     form_class = AdminMemberForm
     template_name = 'admin_JESFOD/member_form.html'
@@ -209,7 +370,7 @@ class MemberUpdateView(UpdateView):
         return context
 
 
-class MemberDeleteView(DeleteView):
+class MemberDeleteView(BureauRequiredMixin, DeleteView):
     model = Member
     success_url = reverse_lazy('member_list')
 
@@ -262,7 +423,7 @@ def _send_news_notification(news):
 #  GALLERY CRUD                                                       #
 # ------------------------------------------------------------------ #
 @login_required
-@secretaire_required
+@president_required
 def gallery_list(request):
     galleries = Gallery.objects.all().order_by('-created_date')
     return render(request, 'admin_JESFOD/gallery_list.html', {
@@ -272,7 +433,7 @@ def gallery_list(request):
 
 
 @login_required
-@secretaire_required
+@president_required
 def gallery_create(request):
     if request.method == 'POST':
         form = GalleryForm(request.POST, request.FILES)
@@ -290,7 +451,7 @@ def gallery_create(request):
 
 
 @login_required
-@secretaire_required
+@president_required
 def gallery_update(request, pk):
     gallery = get_object_or_404(Gallery, pk=pk)
     if request.method == 'POST':
@@ -308,7 +469,7 @@ def gallery_update(request, pk):
 
 
 @login_required
-@secretaire_required
+@president_required
 def gallery_delete(request, pk):
     gallery = get_object_or_404(Gallery, pk=pk)
     if request.method == 'POST':
@@ -324,7 +485,7 @@ def gallery_delete(request, pk):
 #  EVENT CRUD                                                         #
 # ------------------------------------------------------------------ #
 @login_required
-@secretaire_required
+@president_required
 def event_list(request):
     events = Event.objects.all().order_by('-event_date')
     return render(request, 'admin_JESFOD/event_list.html', {
@@ -334,7 +495,7 @@ def event_list(request):
 
 
 @login_required
-@secretaire_required
+@president_required
 def event_create(request):
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
@@ -352,7 +513,7 @@ def event_create(request):
 
 
 @login_required
-@secretaire_required
+@president_required
 def event_update(request, pk):
     event = get_object_or_404(Event, pk=pk)
     if request.method == 'POST':
@@ -370,7 +531,7 @@ def event_update(request, pk):
 
 
 @login_required
-@secretaire_required
+@president_required
 def event_delete(request, pk):
     event = get_object_or_404(Event, pk=pk)
     if request.method == 'POST':
@@ -641,7 +802,7 @@ def export_finance_pdf(request):
     return response
 
 @login_required
-@bureau_required
+@president_required
 def export_members_pdf(request):
     members = Member.objects.all().order_by('name')
     context = {

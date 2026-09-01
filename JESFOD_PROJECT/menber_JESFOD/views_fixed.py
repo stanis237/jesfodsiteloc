@@ -1,4 +1,5 @@
 import os
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import FileResponse, Http404, JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate
@@ -8,8 +9,9 @@ from django.views.generic import DetailView
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from django.views.decorators.http import require_POST
 from .forms import MemberForm, CustomLoginForm, CustomRegisterForm
-from .models import Member, News, Event, FinanceEntry
+from .models import Member, News, Event, FinanceEntry, Seance, Presence
 from admin_JESFOD.models import Gallery
 
 def contact_submit(request):
@@ -111,20 +113,40 @@ def home(request):
     bureau_members = sorted(bureau_qs, key=lambda m: POSITION_ORDER.get(m.position, 99))[:8]
 
     from .models import Seance
-    reunion_members = Member.objects.all().order_by('-user__date_joined')
-    seances = Seance.objects.all().order_by('-date')[:5]
+    from itertools import groupby
 
-    news = News.objects.filter(is_published=True)[:5]
+    # Group members by year of registration
+    all_members = Member.objects.select_related('user').order_by('-user__date_joined')
+    members_by_year = {}
+    for m in all_members:
+        year = m.user.date_joined.year
+        members_by_year.setdefault(year, []).append(m)
+    # Sort years descending
+    members_by_year = dict(sorted(members_by_year.items(), reverse=True))
+
+    # Group seances by year
+    all_seances = Seance.objects.all().order_by('-date')
+    seances_by_year = {}
+    for s in all_seances:
+        year = s.date.year
+        seances_by_year.setdefault(year, []).append(s)
+    seances_by_year = dict(sorted(seances_by_year.items(), reverse=True))
+
+    news = News.objects.filter(is_published=True)[:6]
     galleries = Gallery.objects.filter(is_published=True)[:5]
     events = Event.objects.filter(is_published=True, event_date__gte=timezone.now()).order_by('event_date')[:6]
     total_members = Member.objects.count()
     total_news = News.objects.filter(is_published=True).count()
+    reunion_members = all_members  # kept for backward compat
+    seances = all_seances[:5]      # kept for backward compat
 
     return render(request, 'home.html', {
         'member': member,
         'bureau_members': bureau_members,
         'reunion_members': reunion_members,
         'seances': seances,
+        'members_by_year': members_by_year,
+        'seances_by_year': seances_by_year,
         'news': news,
         'galleries': galleries,
         'events': events,
@@ -315,11 +337,13 @@ def member_activities(request):
 # ------------------------------------------------------------------ #
 #  PUBLIC VISITOR VIEWS                                               #
 # ------------------------------------------------------------------ #
+@login_required
 def public_events(request):
     events = Event.objects.filter(is_published=True).order_by('-event_date')
     return render(request, 'public_events.html', {'events': events})
 
 
+@login_required
 def public_event_detail(request, pk):
     event = get_object_or_404(Event, pk=pk, is_published=True)
     recent_events = Event.objects.filter(is_published=True).exclude(pk=pk).order_by('-event_date')[:3]
@@ -329,15 +353,66 @@ def public_event_detail(request, pk):
     })
 
 
+@login_required
 def public_gallery(request):
     galleries = Gallery.objects.filter(is_published=True).order_by('-created_date')
     return render(request, 'public_gallery.html', {'galleries': galleries})
 
 
+@login_required
 def download_photo(request, pk):
     gallery = get_object_or_404(Gallery, pk=pk, is_published=True)
     if not gallery.image or not os.path.exists(gallery.image.path):
         raise Http404("Image introuvable.")
     response = FileResponse(open(gallery.image.path, 'rb'), as_attachment=True)
     return response
+
+
+# ------------------------------------------------------------------ #
+#  PRESENCE (Geolocation)                                             #
+# ------------------------------------------------------------------ #
+@login_required
+@require_POST
+def mark_presence_ajax(request):
+    """
+    Receive GPS coordinates via AJAX POST and record member's presence
+    for the current day's Seance (or the most recent one).
+    """
+    try:
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'status': 'error', 'message': 'Données invalides.'}, status=400)
+
+    if latitude is None or longitude is None:
+        return JsonResponse({'status': 'error', 'message': 'Coordonnées GPS manquantes.'}, status=400)
+
+    member, _ = _get_or_create_member(request.user)
+
+    # Find today's seance, or the most recent one
+    today = timezone.localdate()
+    seance = Seance.objects.filter(date=today).first()
+    if not seance:
+        seance = Seance.objects.filter(date__lte=today).order_by('-date').first()
+    if not seance:
+        return JsonResponse({'status': 'error', 'message': 'Aucune séance trouvée.'}, status=404)
+
+    # Check if already marked
+    if Presence.objects.filter(member=member, seance=seance).exists():
+        return JsonResponse({
+            'status': 'already',
+            'message': f'Présence déjà enregistrée pour la séance du {seance.date.strftime("%d/%m/%Y")}.'
+        })
+
+    Presence.objects.create(
+        member=member,
+        seance=seance,
+        latitude=latitude,
+        longitude=longitude,
+    )
+    return JsonResponse({
+        'status': 'success',
+        'message': f'Présence enregistrée pour la séance du {seance.date.strftime("%d/%m/%Y")}.',
+    })
 

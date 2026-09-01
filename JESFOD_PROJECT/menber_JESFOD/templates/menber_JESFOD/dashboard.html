@@ -16,6 +16,12 @@
         <i class="bi bi-newspaper me-1"></i>Actualités
       </a>
       {% if member.is_bureau %}
+        <a href="{% url 'gallery_list' %}" class="btn btn-outline-info rounded-pill px-3 fw-semibold">
+          <i class="bi bi-images me-1"></i>Gérer la Galerie
+        </a>
+        <a href="{% url 'event_list' %}" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
+          <i class="bi bi-calendar-event me-1"></i>Gérer les Événements
+        </a>
         <a href="{% url 'admin_dashboard' %}" class="btn btn-warning rounded-pill px-3 fw-semibold">
           <i class="bi bi-shield-lock me-1"></i>Espace Bureau
         </a>
@@ -178,6 +184,43 @@
     </div>
   </div>
 
+  <!-- Présence Géolocalisée -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow rounded-4 overflow-hidden">
+        <div class="card-header py-3 px-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #6f42c1, #0d6efd);">
+          <h5 class="mb-0 fw-bold text-white"><i class="bi bi-geo-alt-fill me-2"></i>Présence à la Séance</h5>
+          <span class="badge bg-white text-primary rounded-pill px-3" id="presenceStatus">
+            <i class="bi bi-clock me-1"></i>En attente
+          </span>
+        </div>
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <p class="text-muted mb-2">
+                <i class="bi bi-info-circle me-1"></i>
+                Cliquez sur le bouton ci-dessous pour enregistrer votre présence à la séance du jour.
+                Votre position GPS sera envoyée pour vérification.
+              </p>
+              <div id="presenceMessage" class="d-none alert alert-info border-0 rounded-3 shadow-sm mb-0 mt-2"></div>
+            </div>
+            <div class="col-md-4 text-center text-md-end mt-3 mt-md-0">
+              <button type="button" id="markPresenceBtn" class="btn btn-lg rounded-pill px-4 py-2 fw-bold text-white shadow-sm"
+                      style="background: linear-gradient(135deg, #6f42c1, #0d6efd);">
+                <i class="bi bi-geo-alt me-2"></i>Marquer ma Présence
+              </button>
+            </div>
+          </div>
+          <div id="presenceCoords" class="d-none mt-3 p-3 bg-light rounded-3 border">
+            <small class="text-muted">
+              <i class="bi bi-pin-map me-1"></i>Position : <span id="presenceLat">—</span>, <span id="presenceLng">—</span>
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Actualités -->
   <div class="row">
     <div class="col-12">
@@ -205,4 +248,99 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const btn = document.getElementById('markPresenceBtn');
+  const msgBox = document.getElementById('presenceMessage');
+  const statusBadge = document.getElementById('presenceStatus');
+  const coordsBox = document.getElementById('presenceCoords');
+  const latSpan = document.getElementById('presenceLat');
+  const lngSpan = document.getElementById('presenceLng');
+
+  function showMsg(text, type) {
+    msgBox.className = 'alert alert-' + type + ' border-0 rounded-3 shadow-sm mb-0 mt-2';
+    msgBox.textContent = text;
+    msgBox.classList.remove('d-none');
+  }
+
+  function setStatus(text, bgClass) {
+    statusBadge.innerHTML = text;
+    statusBadge.className = 'badge rounded-pill px-3 ' + bgClass;
+  }
+
+  btn.addEventListener('click', function() {
+    if (!navigator.geolocation) {
+      showMsg('La géolocalisation n\'est pas supportée par votre navigateur.', 'danger');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Localisation en cours…';
+    setStatus('<i class="bi bi-arrow-repeat spin me-1"></i>Localisation…', 'bg-warning text-dark');
+
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Show coordinates
+        latSpan.textContent = lat.toFixed(6);
+        lngSpan.textContent = lng.toFixed(6);
+        coordsBox.classList.remove('d-none');
+
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Envoi…';
+
+        fetch("{% url 'mark_presence' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ latitude: lat, longitude: lng })
+        })
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+          if (data.status === 'success') {
+            showMsg(data.message, 'success');
+            setStatus('<i class="bi bi-check-circle-fill me-1"></i>Présent', 'bg-success text-white');
+            btn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Présence enregistrée';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+          } else if (data.status === 'already') {
+            showMsg(data.message, 'info');
+            setStatus('<i class="bi bi-check-circle me-1"></i>Déjà marqué', 'bg-info text-white');
+            btn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Déjà enregistré';
+            btn.disabled = false;
+          } else {
+            showMsg(data.message || 'Erreur inconnue.', 'danger');
+            setStatus('<i class="bi bi-x-circle me-1"></i>Erreur', 'bg-danger text-white');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-geo-alt me-2"></i>Réessayer';
+          }
+        })
+        .catch(function(err) {
+          showMsg('Erreur réseau. Vérifiez votre connexion.', 'danger');
+          setStatus('<i class="bi bi-x-circle me-1"></i>Erreur', 'bg-danger text-white');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-geo-alt me-2"></i>Réessayer';
+        });
+      },
+      function(error) {
+        let errMsg = 'Erreur de géolocalisation.';
+        if (error.code === 1) errMsg = 'Accès à la position refusé. Veuillez autoriser la géolocalisation.';
+        else if (error.code === 2) errMsg = 'Position non disponible.';
+        else if (error.code === 3) errMsg = 'Délai d\'attente dépassé.';
+        showMsg(errMsg, 'warning');
+        setStatus('<i class="bi bi-exclamation-triangle me-1"></i>Refusé', 'bg-warning text-dark');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-geo-alt me-2"></i>Réessayer';
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  });
+})();
+</script>
 {% endblock %}

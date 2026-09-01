@@ -19,14 +19,27 @@
   </div>
 
   <div class="d-flex flex-wrap gap-2 mb-5">
-    <a href="{% url 'member_list' %}" class="btn btn-primary rounded-pill px-4 fw-semibold"><i class="bi bi-people me-2"></i>Gérer les Membres</a>
-    <a href="{% url 'pending_certifications' %}" class="btn btn-warning rounded-pill px-4 fw-semibold"><i class="bi bi-patch-check me-2"></i>Demandes de certification</a>
-    <a href="{% url 'news_create' %}" class="btn btn-success rounded-pill px-4 fw-semibold"><i class="bi bi-newspaper me-2"></i>Publier une actualité</a>
-    <a href="{% url 'event_list' %}" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;"><i class="bi bi-calendar-event me-2"></i>Gérer les événements</a>
-    <a href="{% url 'gallery_list' %}" class="btn btn-info rounded-pill px-4 fw-semibold text-white"><i class="bi bi-images me-2"></i>Gérer la galerie</a>
-    <a href="{% url 'finance_list' %}" class="btn btn-dark rounded-pill px-4 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Gestion Finances</a>
-    <a href="{% url 'seance_list' %}" class="btn btn-secondary rounded-pill px-4 fw-semibold"><i class="bi bi-calendar3 me-2"></i>Gestion des Réunions</a>
-    <a href="{% url 'absence_list' %}" class="btn btn-outline-danger rounded-pill px-4 fw-semibold"><i class="bi bi-person-x me-2"></i>Gestion des Absences</a>
+    {% if is_president_role %}
+      <a href="{% url 'bureau_setup' %}" class="btn btn-warning rounded-pill px-4 fw-semibold text-dark shadow-sm"><i class="bi bi-shield-lock-fill me-2"></i>Créer Accès Bureau</a>
+      <a href="{% url 'member_list' %}" class="btn btn-primary rounded-pill px-4 fw-semibold"><i class="bi bi-people me-2"></i>Gérer les Membres</a>
+      <a href="{% url 'pending_certifications' %}" class="btn btn-outline-warning rounded-pill px-4 fw-semibold"><i class="bi bi-patch-check me-2"></i>Certifications</a>
+      <a href="{% url 'event_list' %}" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;"><i class="bi bi-calendar-event me-2"></i>Événements</a>
+      <a href="{% url 'gallery_list' %}" class="btn btn-info rounded-pill px-4 fw-semibold text-white"><i class="bi bi-images me-2"></i>Galerie Photo/Vidéo</a>
+    {% endif %}
+    {% if is_secretaire_role or is_censeur_role %}
+      <a href="{% url 'seance_list' %}" class="btn btn-secondary rounded-pill px-4 fw-semibold"><i class="bi bi-calendar3 me-2"></i>Gestion Réunions</a>
+      <a href="{% url 'absence_list' %}" class="btn btn-outline-danger rounded-pill px-4 fw-semibold"><i class="bi bi-person-x me-2"></i>Suivi Absences & Discipline</a>
+    {% endif %}
+    {% if is_secretaire_role or is_com_culture_role %}
+      <a href="{% url 'news_create' %}" class="btn btn-success rounded-pill px-4 fw-semibold"><i class="bi bi-newspaper me-2"></i>Publier Actualité</a>
+    {% endif %}
+    {% if is_com_culture_role and not is_president_role %}
+      <a href="{% url 'event_list' %}" class="btn btn-primary rounded-pill px-4 fw-semibold"><i class="bi bi-calendar-event me-2"></i>Événements</a>
+      <a href="{% url 'gallery_list' %}" class="btn btn-info rounded-pill px-4 fw-semibold text-white"><i class="bi bi-images me-2"></i>Galerie</a>
+    {% endif %}
+    {% if is_tresorier_role %}
+      <a href="{% url 'finance_list' %}" class="btn btn-dark rounded-pill px-4 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Gestion Finances</a>
+    {% endif %}
   </div>
 
   <div class="row g-4 mb-5 text-center">
@@ -78,6 +91,7 @@
   </div>
 
   <!-- Finance Stats -->
+  {% if is_tresorier_role %}
   <div class="row g-4 mb-5">
     <div class="col-12">
       <h5 class="fw-bold mb-3"><i class="bi bi-wallet2 me-2 text-primary"></i>Aperçu Financier</h5>
@@ -122,10 +136,12 @@
       <a href="{% url 'finance_list' %}" class="btn btn-outline-primary rounded-pill px-4 fw-semibold"><i class="bi bi-arrow-right me-2"></i>Voir toutes les finances</a>
     </div>
   </div>
+  {% endif %}
 
   <div class="row g-4">
     <!-- Chart Section -->
     <div class="col-lg-8">
+      {% if is_tresorier_role %}
       <div class="card shadow border-0 rounded-4 overflow-hidden mb-4">
         <div class="card-header bg-white py-3">
           <h5 class="mb-0 fw-semibold"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Répartition des Fonds</h5>
@@ -134,6 +150,7 @@
           <canvas id="financeChart" style="max-height: 300px;"></canvas>
         </div>
       </div>
+      {% endif %}
       
       <div class="card shadow border-0 rounded-4 overflow-hidden">
         <div class="card-header bg-dark text-white py-3">
@@ -164,17 +181,25 @@
           <h5 class="mb-0 fw-semibold"><i class="bi bi-lightning-charge me-2"></i>Actions Rapides</h5>
         </div>
         <div class="card-body p-4 d-grid gap-2">
-          <a href="{% url 'news_create' %}" class="btn btn-success rounded-pill mb-1 fw-semibold"><i class="bi bi-plus-circle me-2"></i>Nouvelle Actualité</a>
-          <a href="{% url 'event_list' %}" class="btn btn-primary rounded-pill mb-1 fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;"><i class="bi bi-calendar-event me-2"></i>Gérer les Événements</a>
-          <a href="{% url 'gallery_list' %}" class="btn btn-info text-white rounded-pill mb-1 fw-semibold"><i class="bi bi-images me-2"></i>Gérer la Galerie</a>
+          {% if is_president_role %}
+            <a href="{% url 'bureau_setup' %}" class="btn btn-warning rounded-pill mb-1 fw-bold text-dark shadow-sm"><i class="bi bi-shield-lock-fill me-2"></i>Initialiser Accès Bureau</a>
+            <a href="{% url 'event_list' %}" class="btn btn-primary rounded-pill mb-1 fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;"><i class="bi bi-calendar-event me-2"></i>Gérer les Événements</a>
+            <a href="{% url 'gallery_list' %}" class="btn btn-info text-white rounded-pill mb-1 fw-semibold"><i class="bi bi-images me-2"></i>Gérer la Galerie</a>
+          {% endif %}
           <a href="{% url 'pending_certifications' %}" class="btn btn-warning rounded-pill mb-1 fw-semibold"><i class="bi bi-patch-check me-2"></i>Certifications</a>
-          <a href="{% url 'seance_list' %}" class="btn btn-secondary rounded-pill mb-1 fw-semibold"><i class="bi bi-calendar3 me-2"></i>Séances</a>
-          <a href="{% url 'absence_list' %}" class="btn btn-outline-danger rounded-pill mb-1 fw-semibold"><i class="bi bi-person-x me-2"></i>Absences</a>
-          <a href="{% url 'finance_list' %}" class="btn btn-dark rounded-pill mb-1 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Gestion Finances</a>
-          <a href="{% url 'finance_create' %}" class="btn btn-outline-success rounded-pill mb-1 fw-semibold"><i class="bi bi-plus-circle me-2"></i>Nouvelle Entrée Financière</a>
+          {% if is_secretaire_role %}
+            <a href="{% url 'seance_list' %}" class="btn btn-secondary rounded-pill mb-1 fw-semibold"><i class="bi bi-calendar3 me-2"></i>Séances</a>
+            <a href="{% url 'absence_list' %}" class="btn btn-outline-danger rounded-pill mb-1 fw-semibold"><i class="bi bi-person-x me-2"></i>Absences</a>
+          {% endif %}
+          {% if is_tresorier_role %}
+            <a href="{% url 'finance_list' %}" class="btn btn-dark rounded-pill mb-1 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Gestion Finances</a>
+            <a href="{% url 'finance_create' %}" class="btn btn-outline-success rounded-pill mb-1 fw-semibold"><i class="bi bi-plus-circle me-2"></i>Nouvelle Entrée Financière</a>
+          {% endif %}
           
           <a href="{% url 'member_list' %}" class="btn btn-dark rounded-pill mb-3 fw-semibold"><i class="bi bi-people me-2"></i>Gérer les Membres</a>
-          <a href="/admin/" class="btn btn-outline-primary rounded-pill mb-1 fw-semibold"><i class="bi bi-gear me-2"></i>Django Administration</a>
+          {% if user.is_superuser %}
+            <a href="/admin/" class="btn btn-outline-primary rounded-pill mb-1 fw-semibold"><i class="bi bi-gear me-2"></i>Django Administration</a>
+          {% endif %}
           <a href="{% url 'logout' %}" class="btn btn-outline-danger rounded-pill fw-semibold"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a>
         </div>
       </div>
@@ -184,6 +209,7 @@
 
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if is_tresorier_role %}
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     var ctx = document.getElementById('financeChart').getContext('2d');
@@ -219,5 +245,6 @@
     });
   });
 </script>
+{% endif %}
 {% endblock %}
 
